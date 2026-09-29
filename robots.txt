@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://aracristais.com.br/sitemap.xml
