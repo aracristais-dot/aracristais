@@ -1,0 +1,43 @@
+{
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/feed.xml",
+      "destination": "/api/feed"
+    },
+    {
+      "source": "/:secao(historia|arca|loja|blog)",
+      "destination": "/api/pagina?rota=:secao"
+    },
+    {
+      "source": "/:secao(loja|blog)/:slug",
+      "destination": "/api/pagina?rota=:secao/:slug"
+    }
+  ],
+  "functions": {
+    "api/pagina.js": {
+      "includeFiles": "index.html"
+    },
+    "api/sitemap.js": {
+      "includeFiles": "index.html"
+    },
+    "api/feed.js": {
+      "includeFiles": "index.html"
+    }
+  },
+  "headers": [
+    {
+      "source": "/img/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ]
+}
