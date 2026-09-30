@@ -31,6 +31,17 @@ function template() {
   for (const c of cands) { try { _tpl = fs.readFileSync(c, 'utf8'); return _tpl; } catch (e) { /* tenta o próximo */ } }
   throw new Error('index.html não encontrado');
 }
+/* garante o modelo: do pacote da função ou, se faltar, do próprio site */
+async function prepararTemplate(origem) {
+  try { return template(); } catch (e) { /* busca no site */ }
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), 3000);
+  try {
+    const r = await fetch((origem || DOMINIO) + '/index.html', { signal: ctl.signal });
+    if (r.ok) { _tpl = await r.text(); return _tpl; }
+  } finally { clearTimeout(t); }
+  throw new Error('index.html não encontrado');
+}
 function blocoJSON(html, id) {
   const m = html.match(new RegExp('<script type="application/json" id="' + id + '">([\\s\\S]*?)</script>'));
   if (!m) return null;
@@ -385,4 +396,4 @@ async function feed() {
     itens.join('\n') + '\n</channel></rss>\n';
 }
 
-module.exports = { renderizar, sitemap, feed, template, DOMINIO };
+module.exports = { renderizar, sitemap, feed, template, prepararTemplate, DOMINIO };

@@ -4,6 +4,8 @@ const ara = require('./_ara');
 
 module.exports = async (req, res) => {
   try {
+    const host = req.headers && (req.headers['x-forwarded-host'] || req.headers.host);
+    await ara.prepararTemplate(host ? 'https://' + host : undefined);
     const x = await ara.feed();
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');

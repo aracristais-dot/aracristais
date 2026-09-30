@@ -7,12 +7,20 @@ module.exports = async (req, res) => {
   let rota = u.searchParams.get('rota');
   if (!rota) rota = u.pathname.replace(/^\/api\/pagina\/?/, '');
   rota = decodeURIComponent(String(rota)).replace(/^\/+|\/+$/g, '');
+  const host = req.headers && (req.headers['x-forwarded-host'] || req.headers.host);
   let r;
   try {
+    await ara.prepararTemplate(host ? 'https://' + host : undefined);
     r = await ara.renderizar(rota, u.searchParams);
   } catch (e) {
     console.error('ARA pagina:', e);
-    r = { status: 200, html: ara.template() };
+    /* nunca deixa o cliente numa página de erro: cai no site normal, que abre a mesma página pelo navegador */
+    u.searchParams.delete('rota');
+    const q = u.searchParams.toString();
+    res.statusCode = 302;
+    res.setHeader('Location', '/' + (q ? '?' + q : '') + '#' + rota);
+    res.setHeader('Cache-Control', 'no-store');
+    return res.end();
   }
   res.statusCode = r.status;
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
