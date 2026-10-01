@@ -22,6 +22,13 @@ module.exports = async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     return res.end();
   }
+  if (r.location) {
+    /* endereço antigo de um produto que mudou de nome */
+    res.statusCode = r.status;
+    res.setHeader('Location', r.location);
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=3600');
+    return res.end();
+  }
   res.statusCode = r.status;
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', r.status === 200 ? 'public, max-age=0, s-maxage=300, stale-while-revalidate=86400' : 'public, max-age=0, s-maxage=60');

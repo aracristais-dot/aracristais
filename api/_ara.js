@@ -12,7 +12,10 @@ const path = require('path');
 
 const DOMINIO = 'https://www.aracristais.com.br';
 const VIEWS = ['inicio', 'historia', 'arca', 'loja', 'blog'];
-const SECOES = { colecao: '/arca#colecao', pedido: '/arca#pedido', obra: '/#obra', intencoes: '/#intencoes', cristais: '/historia#cristais' };
+const SECOES = { colecao: '/arca#colecao', pedido: '/arca#pedido', obra: '/#obra', intencoes: '/#intencoes', cristais: '/historia#cristais', 'linha-do-tempo': '/historia#linha-do-tempo' };
+const INTRO_CRISTAIS = '<p class="lj-sec-intro">Os cristais se formam ao longo de milhões de anos e acompanham a humanidade desde os sumérios. <a href="/historia#linha-do-tempo">Conheça essa história</a>, que também dá nome às peças da ARA.</p>';
+/* produtos que mudaram de nome: o endereço antigo leva ao novo */
+const ENDERECOS_ANTIGOS = { 'ara-santuario': 'caixa-relicario', 'ara-porta-cristais': 'estojo-travessia' };
 const COLS_PRODUTO = 'id,slug,nome,tag,frase,texto,preco,rotulo,variantes,detalhes,uso,cuidados,foto_url,disponivel,sem_adicional,ativo,ordem,seo_titulo,seo_descricao,estoque,atualizado_em,categoria';
 const ARCA_PADRAO = {
   essencial: { nome: 'Arca Essencial', preco: 1200, medidas: '30 x 16 x 8,5 cm', prazo: '4 dias',
@@ -132,7 +135,7 @@ function capaLoja(d) { const p = d.produtos.filter(x => disponivel(x) && !ilustr
 function gradeLoja(d) {
   const card = p => cardProduto(d, p), cr = d.produtos.filter(p => cristal(p)), ac = d.produtos.filter(p => !cristal(p));
   if (!cr.length || !ac.length) return '<div class="lj-grade">' + d.produtos.map(card).join('') + '</div>';
-  return '<h2 class="lj-sec">Cristais</h2><div class="lj-grade">' + cr.map(card).join('') + '</div>' +
+  return '<h2 class="lj-sec">Cristais</h2>' + INTRO_CRISTAIS + '<div class="lj-grade">' + cr.map(card).join('') + '</div>' +
     '<h2 class="lj-sec">Acessórios e complementos</h2><div class="lj-grade">' + ac.map(card).join('') + '</div>';
 }
 function foto(d, p, v) {
@@ -314,6 +317,11 @@ async function renderizar(rota, params) {
   let status = 200, o;
   if (base === 'loja' && slug) {
     const p = d.produtos.filter(x => x.slug === slug)[0];
+    const novo = !p && ENDERECOS_ANTIGOS[slug];
+    if (novo && d.produtos.some(x => x.slug === novo)) {
+      const q = params && params.toString ? params.toString() : '';
+      return { status: 301, location: '/loja/' + novo + (q ? '?' + q : ''), html: '' };
+    }
     if (!p) { status = 404; o = { titulo: 'Produto não encontrado | ARA', descricao: seo.descricao, url: DOMINIO + '/loja', robots: 'noindex,follow' }; }
     else {
       const v = opcaoInicial(p, params && params.get && params.get('opcao'));
