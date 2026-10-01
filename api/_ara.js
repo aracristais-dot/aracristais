@@ -13,7 +13,7 @@ const path = require('path');
 const DOMINIO = 'https://www.aracristais.com.br';
 const VIEWS = ['inicio', 'historia', 'arca', 'loja', 'blog'];
 const SECOES = { colecao: '/arca#colecao', pedido: '/arca#pedido', obra: '/#obra', intencoes: '/#intencoes', cristais: '/historia#cristais' };
-const COLS_PRODUTO = 'id,slug,nome,tag,frase,texto,preco,rotulo,variantes,detalhes,uso,cuidados,foto_url,disponivel,sem_adicional,ativo,ordem,seo_titulo,seo_descricao,estoque,atualizado_em';
+const COLS_PRODUTO = 'id,slug,nome,tag,frase,texto,preco,rotulo,variantes,detalhes,uso,cuidados,foto_url,disponivel,sem_adicional,ativo,ordem,seo_titulo,seo_descricao,estoque,atualizado_em,categoria';
 const ARCA_PADRAO = {
   essencial: { nome: 'Arca Essencial', preco: 1200, medidas: '30 x 16 x 8,5 cm', prazo: '4 dias',
     descricao: 'Mosaico de cristais naturais brasileiros montado à mão numa caixa compacta de madeira, com vidro nas laterais e tampa que abre. Criado a partir do seu nome completo e da sua data de nascimento: uma peça única.' },
@@ -22,6 +22,9 @@ const ARCA_PADRAO = {
   atelie: { nome: 'Arca Ateliê', preco: 4200, medidas: '30 x 22 x 10 cm', prazo: '40 dias',
     descricao: 'Mosaico de cristais naturais brasileiros numa caixa feita à mão, sob encomenda, por um marceneiro artesão, em madeira maciça e vidro. Criado a partir do seu nome completo e da sua data de nascimento: exclusiva do início ao fim.' },
 };
+const WHATS_PADRAO = '5511973371416';
+const ICONE_HUMANO = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 5.5h16v10H9.5L5 19.5v-4H4z"/><path d="M12 13.2s-3-1.8-3-3.6a1.6 1.6 0 0 1 3-.8 1.6 1.6 0 0 1 3 .8c0 1.8-3 3.6-3 3.6z" fill="currentColor" stroke="none"/></svg>';
+function whats(d) { const c = (d.cfg && d.cfg.contato) || {}; return String(c.whatsapp || WHATS_PADRAO).replace(/\D/g, '') || WHATS_PADRAO; }
 
 /* ---------- modelo da página ---------- */
 let _tpl = null;
@@ -83,7 +86,7 @@ async function dados() {
   const okProd = Array.isArray(prods) && prods.length > 0, okPost = Array.isArray(posts) && posts.length > 0;
   const ordem = (a, b) => (a.ordem || 0) - (b.ordem || 0);
   const d = {
-    produtos: (okProd ? prods : def.produtos || []).filter(p => p.ativo !== false).sort(ordem),
+    produtos: (okProd ? prods : def.produtos || []).filter(p => p.ativo !== false).sort((a, b) => (cristal(b) - cristal(a)) || ordem(a, b)),
     posts: (okPost ? posts : def.posts || []).filter(p => p.publicado !== false).sort(ordem),
     config: Array.isArray(cfg) ? cfg : [],
     ilus: def.ilus || {},
@@ -117,7 +120,21 @@ function disponivel(p) {
 }
 function mesmoPreco(p) { const vs = p.variantes || []; return vs.length > 0 && vs.every(k => Number(k.preco) === Number(vs[0].preco)); }
 function precoBase(p) { const vs = p.variantes || []; return vs.length ? Math.min.apply(null, vs.map(v => Number(v.preco))) : Number(p.preco); }
-function textoPreco(p) { if (!disponivel(p)) return 'Esgotado'; const vs = p.variantes || []; return (vs.length && !mesmoPreco(p) ? 'a partir de ' : '') + brl0(precoBase(p)); }
+function textoPreco(p) { const vs = p.variantes || []; return (vs.length && !mesmoPreco(p) ? 'a partir de ' : '') + brl0(precoBase(p)) + (disponivel(p) ? '' : ' · Esgotado'); }
+/* cristais vêm primeiro na loja; o resto é acessório e complemento */
+function cristal(p) { return p && p.categoria === 'cristal' ? 1 : 0; }
+/* imagem ilustrativa (enquanto não há foto da peça): fica fora do Google Shopping */
+function ilustrativa(u) { return /\/img\/loja\/ilus-/.test(String(u || '')); }
+/* "Também na loja": primeiro o que dá para comprar agora */
+function relacionados(d, p) { return d.produtos.filter(x => x.slug !== p.slug).map((x, i) => [x, i]).sort((a, b) => (disponivel(b[0]) - disponivel(a[0])) || (a[1] - b[1])).slice(0, 3).map(x => x[0]); }
+/* foto da prévia do link da loja: a primeira peça à venda com foto de verdade */
+function capaLoja(d) { const p = d.produtos.filter(x => disponivel(x) && !ilustrativa(foto(d, x, null)))[0] || d.produtos[0]; return p ? foto(d, p, null) : ''; }
+function gradeLoja(d) {
+  const card = p => cardProduto(d, p), cr = d.produtos.filter(p => cristal(p)), ac = d.produtos.filter(p => !cristal(p));
+  if (!cr.length || !ac.length) return '<div class="lj-grade">' + d.produtos.map(card).join('') + '</div>';
+  return '<h2 class="lj-sec">Cristais</h2><div class="lj-grade">' + cr.map(card).join('') + '</div>' +
+    '<h2 class="lj-sec">Acessórios e complementos</h2><div class="lj-grade">' + ac.map(card).join('') + '</div>';
+}
 function foto(d, p, v) {
   if (v && v.img) return v.img;
   if (v && d.imgs[p.slug + '-' + v.id]) return d.imgs[p.slug + '-' + v.id];
@@ -208,13 +225,17 @@ function htmlProduto(d, p, v) {
   const preco = v ? Number(v.preco) : Number(p.preco);
   const det = (p.detalhes || []).map(x => '<li><span>' + esc(x.k) + '</span><span>' + esc(x.v) + '</span></li>').join('');
   const vars = vs.map(x => '<button type="button" aria-pressed="' + (x === v) + '"' + (varOk(p, x) ? '' : ' disabled') + '>' + esc(mesmoPreco(p) ? x.nome : x.nome + ' · ' + brl0(x.preco)) + (varOk(p, x) ? '' : ' · esgotado') + '</button>').join('');
-  const rel = d.produtos.filter(x => x.slug !== p.slug).slice(0, 3).map(x => cardProduto(d, x)).join('');
+  const rel = relacionados(d, p).map(x => cardProduto(d, x)).join('');
+  const wa = t => 'https://wa.me/' + esc(whats(d)) + '?text=' + encodeURIComponent(t);
   return '<p class="lj-crumbs"><a href="/">Início</a> / <a href="/loja">Loja</a> / ' + esc(p.nome) + '</p>' +
-    '<article class="lj-prod"><div class="lj-foto' + (fotoReal(d, p, v) ? ' real' : '') + '"><img id="lj-foto-img" src="' + esc(foto(d, p, v)) + '" alt="' + esc(p.nome) + '"></div><div class="lj-info">' +
+    '<article class="lj-prod"><div class="lj-foto-box"><div class="lj-foto' + (fotoReal(d, p, v) ? ' real' : '') + '"><img id="lj-foto-img" src="' + esc(foto(d, p, v)) + '" alt="' + esc(p.nome) + '"></div>' +
+    '<p class="lj-ilus" id="lj-ilus"' + (ilustrativa(foto(d, p, v)) ? '' : ' hidden') + '>Imagem ilustrativa. Cada cristal é único: peça pelo WhatsApp as fotos do seu.</p></div><div class="lj-info">' +
     (p.tag ? '<span class="m-tag">' + esc(p.tag) + '</span>' : '') + '<h1>' + esc(p.nome) + '</h1>' + (p.frase ? '<p class="lj-frase-g">' + esc(p.frase) + '</p>' : '') +
     '<p class="lj-preco-g"><span id="lj-preco">' + brl0(preco) + '</span><small id="lj-parc">' + (mx > 1 ? 'ou em até ' + mx + 'x de ' + brl2(preco / mx) + ' sem juros' : '') + '</small></p>' + paragrafos(p.texto) +
     (vars ? '<div><span class="muted" style="font-size:14px">' + esc(p.rotulo || 'Opção') + '</span><div class="lj-var" style="margin-top:8px">' + vars + '</div>' + (v && v.pedras ? '<p class="lj-pedras">Acompanha ' + esc(v.pedras) + '.</p>' : '') + '</div>' : '') +
     '<div class="lj-acoes"><button class="btn btn-champ" type="button"' + (disp ? '' : ' disabled style="opacity:.45"') + '>' + (disp ? 'Comprar' : 'Esgotado') + '</button></div>' +
+    (disp ? '' : '<p class="lj-indisp">Esgotado no momento. <a href="' + wa('Olá! Quero um aviso quando chegar: ' + p.nome + '.') + '" target="_blank" rel="noopener">Avise-me quando chegar</a></p>') +
+    '<p class="lj-humano">' + ICONE_HUMANO + '<span><b>Atendimento 100% humanizado.</b> Quem responde é uma pessoa da ARA. <a href="' + wa('Olá! Tenho uma dúvida sobre: ' + p.nome + '.') + '" target="_blank" rel="noopener">Fale com a gente</a></span></p>' +
     '<p class="muted" style="font-size:14px">' + esc((d.cfg.loja && d.cfg.loja.entrega) || '') + '</p>' +
     '<div><details open><summary>Detalhes</summary><div class="c"><ul class="lj-ficha">' + det + '</ul></div></details>' +
     (p.uso ? '<details><summary>Como usar</summary><div class="c">' + esc(p.uso) + '</div></details>' : '') +
@@ -304,11 +325,11 @@ async function renderizar(rota, params) {
     }
   } else if (base === 'loja') {
     o = { titulo: seo.titulo, descricao: seo.descricao, url: DOMINIO + '/loja',
-      imagem: d.produtos[0] ? foto(d, d.produtos[0], null) : '', imgW: 1000, imgH: 1000, alt: 'Loja ARA',
+      imagem: capaLoja(d), imgW: 1000, imgH: 1000, alt: 'Loja ARA',
       ld: [{ '@type': 'CollectionPage', '@id': DOMINIO + '/loja#pagina', name: seo.titulo, url: DOMINIO + '/loja', isPartOf: { '@id': DOMINIO + '/#site' },
         mainEntity: { '@type': 'ItemList', itemListElement: d.produtos.map((p, i) => ({ '@type': 'ListItem', position: i + 1, url: DOMINIO + '/loja/' + p.slug, name: p.nome })) } },
         migalhas([['Início', '/'], ['Loja', '/loja']])] };
-    html = html.replace('<div class="lj-grade" id="lj-grade"></div>', '<div class="lj-grade" id="lj-grade">' + d.produtos.map(p => cardProduto(d, p)).join('') + '</div>');
+    html = html.replace('<div id="lj-grade"></div>', '<div id="lj-grade">' + gradeLoja(d) + '</div>');
   } else if (base === 'blog' && slug) {
     const p = d.posts.filter(x => x.slug === slug)[0];
     if (!p) { status = 404; o = { titulo: 'Artigo não encontrado | ARA', descricao: seo.descricao, url: DOMINIO + '/blog', robots: 'noindex,follow' }; }
@@ -353,7 +374,7 @@ async function sitemap() {
     url('/', '', casa ? img(casa, 'Arca ARA com cristais numa sala') : ''),
     url('/arca', '', Object.keys(ms).map(k => img(ms[k].foto, ms[k].nome)).join('')),
     url('/loja', ultimo(d.produtos)),
-  ].concat(d.produtos.map(p => url('/loja/' + p.slug, dia(p.atualizado_em), img(foto(d, p, null), p.nome))))
+  ].concat(d.produtos.map(p => url('/loja/' + p.slug, dia(p.atualizado_em), ilustrativa(foto(d, p, null)) ? '' : img(foto(d, p, null), p.nome))))
     .concat([url('/blog', ultimo(d.posts))])
     .concat(d.posts.map(p => url('/blog/' + p.slug, dia(p.atualizado_em) || p.data || '')))
     .concat([url('/historia', '')]);
@@ -366,7 +387,7 @@ async function feed() {
   /* sem a retaguarda não dá para garantir estoque e preço: melhor o Google manter o feed anterior */
   if (!d.okProd || !d.config.length) { const e = new Error('retaguarda indisponível'); e.status = 503; throw e; }
   const itens = [];
-  const item = o => '<item>' +
+  const item = o => ilustrativa(o.imagem) ? '' : '<item>' +
     '<g:id>' + xml(o.id) + '</g:id>' + (o.grupo ? '<g:item_group_id>' + xml(o.grupo) + '</g:item_group_id>' : '') +
     '<g:title>' + xml(o.titulo) + '</g:title><g:description>' + xml(o.descricao) + '</g:description>' +
     '<g:link>' + xml(o.link) + '</g:link><g:image_link>' + xml(abs(o.imagem)) + '</g:image_link>' +
@@ -384,17 +405,17 @@ async function feed() {
   d.produtos.forEach(p => {
     const vs = p.variantes || [], desc = texto(p.texto || p.seo_descricao || p.frase);
     if (!vs.length) {
-      itens.push(item({ id: p.slug, titulo: p.nome + ' · ARA', descricao: desc, link: DOMINIO + '/loja/' + p.slug, imagem: foto(d, p, null), ok: disponivel(p), preco: p.preco, tipo: 'Loja > Objetos de ritual' }));
+      itens.push(item({ id: p.slug, titulo: p.nome + ' · ARA', descricao: desc, link: DOMINIO + '/loja/' + p.slug, imagem: foto(d, p, null), ok: disponivel(p), preco: p.preco, tipo: cristal(p) ? 'Loja > Cristais' : 'Loja > Objetos de ritual' }));
     } else {
       vs.forEach(v => {
         itens.push(item({ id: p.slug + '-' + v.id, grupo: p.slug, titulo: p.nome + ' · ' + v.nome + ' · ARA', descricao: desc + (v.pedras ? ' Acompanha ' + v.pedras + '.' : ''),
-          link: DOMINIO + '/loja/' + p.slug + '?opcao=' + encodeURIComponent(v.id), imagem: foto(d, p, v), ok: disponivel(p) && varOk(p, v), preco: v.preco, tipo: 'Loja > Objetos de ritual' }));
+          link: DOMINIO + '/loja/' + p.slug + '?opcao=' + encodeURIComponent(v.id), imagem: foto(d, p, v), ok: disponivel(p) && varOk(p, v), preco: v.preco, tipo: cristal(p) ? 'Loja > Cristais' : 'Loja > Objetos de ritual' }));
       });
     }
   });
   return '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel>' +
     '<title>ARA · Cristais de autor</title><link>' + DOMINIO + '</link><description>Caixas de cristais personalizadas e objetos de ritual da ARA.</description>\n' +
-    itens.join('\n') + '\n</channel></rss>\n';
+    itens.filter(Boolean).join('\n') + '\n</channel></rss>\n';
 }
 
 module.exports = { renderizar, sitemap, feed, template, prepararTemplate, DOMINIO };
