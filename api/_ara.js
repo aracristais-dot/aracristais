@@ -10,7 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const DOMINIO = 'https://aracristais.com.br';
+const DOMINIO = 'https://www.aracristais.com.br';
 const VIEWS = ['inicio', 'historia', 'arca', 'loja', 'blog'];
 const SECOES = { colecao: '/arca#colecao', pedido: '/arca#pedido', obra: '/#obra', intencoes: '/#intencoes', cristais: '/historia#cristais' };
 const COLS_PRODUTO = 'id,slug,nome,tag,frase,texto,preco,rotulo,variantes,detalhes,uso,cuidados,foto_url,disponivel,sem_adicional,ativo,ordem,seo_titulo,seo_descricao,estoque,atualizado_em';

@@ -3,7 +3,7 @@
 const ara = require('./_ara');
 
 module.exports = async (req, res) => {
-  const u = new URL(req.url || '/', 'https://aracristais.com.br');
+  const u = new URL(req.url || '/', 'https://www.aracristais.com.br');
   let rota = u.searchParams.get('rota');
   if (!rota) rota = u.pathname.replace(/^\/api\/pagina\/?/, '');
   rota = decodeURIComponent(String(rota)).replace(/^\/+|\/+$/g, '');
