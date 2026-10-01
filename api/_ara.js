@@ -104,6 +104,7 @@ const brl0 = v => Number(v).toLocaleString('pt-BR', { style: 'currency', currenc
 const brl2 = v => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const abs = u => !u ? '' : (/^https?:\/\//.test(u) ? u : DOMINIO + (u.charAt(0) === '/' ? u : '/' + u));
 const dia = t => { const m = String(t || '').match(/^\d{4}-\d{2}-\d{2}/); return m ? m[0] : ''; };
+const paragrafos = t => String(t || '').split(/\n\s*\n/).map(x => x.trim()).filter(Boolean).map(x => '<p>' + esc(x).replace(/\n/g, '<br>') + '</p>').join('');
 const texto = t => String(t || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
 /* estoque: o da opção vale quando existe; senão vale o do produto (mesma regra do site e do pagamento) */
@@ -211,7 +212,7 @@ function htmlProduto(d, p, v) {
   return '<p class="lj-crumbs"><a href="/">Início</a> / <a href="/loja">Loja</a> / ' + esc(p.nome) + '</p>' +
     '<article class="lj-prod"><div class="lj-foto' + (fotoReal(d, p, v) ? ' real' : '') + '"><img id="lj-foto-img" src="' + esc(foto(d, p, v)) + '" alt="' + esc(p.nome) + '"></div><div class="lj-info">' +
     (p.tag ? '<span class="m-tag">' + esc(p.tag) + '</span>' : '') + '<h1>' + esc(p.nome) + '</h1>' + (p.frase ? '<p class="lj-frase-g">' + esc(p.frase) + '</p>' : '') +
-    '<p class="lj-preco-g"><span id="lj-preco">' + brl0(preco) + '</span><small id="lj-parc">' + (mx > 1 ? 'ou em até ' + mx + 'x de ' + brl2(preco / mx) + ' sem juros' : '') + '</small></p><p>' + esc(p.texto) + '</p>' +
+    '<p class="lj-preco-g"><span id="lj-preco">' + brl0(preco) + '</span><small id="lj-parc">' + (mx > 1 ? 'ou em até ' + mx + 'x de ' + brl2(preco / mx) + ' sem juros' : '') + '</small></p>' + paragrafos(p.texto) +
     (vars ? '<div><span class="muted" style="font-size:14px">' + esc(p.rotulo || 'Opção') + '</span><div class="lj-var" style="margin-top:8px">' + vars + '</div>' + (v && v.pedras ? '<p class="lj-pedras">Acompanha ' + esc(v.pedras) + '.</p>' : '') + '</div>' : '') +
     '<div class="lj-acoes"><button class="btn btn-champ" type="button"' + (disp ? '' : ' disabled style="opacity:.45"') + '>' + (disp ? 'Comprar' : 'Esgotado') + '</button></div>' +
     '<p class="muted" style="font-size:14px">' + esc((d.cfg.loja && d.cfg.loja.entrega) || '') + '</p>' +
