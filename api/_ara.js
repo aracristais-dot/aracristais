@@ -319,7 +319,8 @@ async function renderizar(rota, params) {
     const p = d.produtos.filter(x => x.slug === slug)[0];
     const novo = !p && ENDERECOS_ANTIGOS[slug];
     if (novo && d.produtos.some(x => x.slug === novo)) {
-      const q = params && params.toString ? params.toString() : '';
+      /* a Vercel acrescenta rota/secao/slug da reescrita; ficam fora do endereço novo */
+      const q = params && params.toString ? new URLSearchParams([...params].filter(kv => ['rota', 'secao', 'slug'].indexOf(kv[0]) < 0)).toString() : '';
       return { status: 301, location: '/loja/' + novo + (q ? '?' + q : ''), html: '' };
     }
     if (!p) { status = 404; o = { titulo: 'Produto não encontrado | ARA', descricao: seo.descricao, url: DOMINIO + '/loja', robots: 'noindex,follow' }; }
