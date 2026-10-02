@@ -13,7 +13,12 @@ const path = require('path');
 const DOMINIO = 'https://www.aracristais.com.br';
 const VIEWS = ['inicio', 'historia', 'arca', 'loja', 'blog'];
 const SECOES = { colecao: '/arca#colecao', pedido: '/arca#pedido', obra: '/#obra', intencoes: '/#intencoes', cristais: '/historia#cristais', 'linha-do-tempo': '/historia#linha-do-tempo' };
-const INTRO_CRISTAIS = '<p class="lj-sec-intro">Os cristais se formam ao longo de milhões de anos e acompanham a humanidade desde os sumérios. <a href="/historia#linha-do-tempo">Conheça essa história</a>, que também dá nome às peças da ARA.</p>';
+/* categorias da loja: vêm da retaguarda (ara_config 'categorias'), na ordem em que aparecem; esta é a reserva */
+const CATS_PADRAO = [
+  { id: 'cristal', nome: 'Cristais', intro: 'Os cristais se formam ao longo de milhões de anos e acompanham a humanidade desde os sumérios. [Conheça essa história](/historia#linha-do-tempo), que também dá nome às peças da ARA.' },
+  { id: 'acessorio', nome: 'Acessórios e complementos', intro: '' },
+  { id: 'incenso', nome: 'Incensos', intro: 'Incensos indianos para perfumar a casa e marcar o início da meditação. Cada aroma é um produto: escolha os seus e adicione ao carrinho.' },
+];
 /* produtos que mudaram de nome: o endereço antigo leva ao novo */
 const ENDERECOS_ANTIGOS = { 'incenso-shankar-massala': 'incenso-shankar-nag-champa', 'ara-santuario': 'caixa-relicario', 'ara-porta-cristais': 'estojo-travessia', 'quartzo-rosa-bruto': 'cristal-de-quartzo', 'drusa-de-citrino': 'pulseira-de-citrino', 'geodo-branco': 'geodo-marroquino' };
 const COLS_BASICAS = 'id,slug,nome,tag,frase,texto,preco,rotulo,variantes,detalhes,uso,cuidados,foto_url,disponivel,sem_adicional,ativo,ordem,seo_titulo,seo_descricao,estoque,categoria';
@@ -107,10 +112,13 @@ async function dados() {
   ]);
   /* coluna nova sem permissão de leitura derruba a consulta inteira: tenta só as colunas básicas antes de usar a lista de reserva */
   if (!Array.isArray(prods)) prods = await sb('ara_produtos', 'select=' + COLS_BASICAS + '&order=ordem.asc');
+  const catsCfg = (Array.isArray(cfg) ? cfg : []).filter(r => r.chave === 'categorias').map(r => r.valor)[0];
+  const cats = Array.isArray(catsCfg) && catsCfg.length ? catsCfg : CATS_PADRAO;
   const okProd = Array.isArray(prods) && prods.length > 0, okPost = Array.isArray(posts) && posts.length > 0;
   const ordem = (a, b) => (a.ordem || 0) - (b.ordem || 0);
   const d = {
-    produtos: (okProd ? prods : def.produtos || []).filter(p => p.ativo !== false).sort((a, b) => (catOrdem(a) - catOrdem(b)) || ordem(a, b)),
+    produtos: (okProd ? prods : def.produtos || []).filter(p => p.ativo !== false).sort((a, b) => (catOrdem(cats, a) - catOrdem(cats, b)) || ordem(a, b)),
+    cats,
     posts: (okPost ? posts : def.posts || []).filter(p => p.publicado !== false).sort(ordem),
     config: Array.isArray(cfg) ? cfg : [],
     ilus: def.ilus || {},
@@ -148,20 +156,22 @@ function textoPreco(p) { const vs = p.variantes || []; return (vs.length && !mes
 /* cristais vêm primeiro na loja; o resto é acessório e complemento */
 function cristal(p) { return p && p.categoria === 'cristal' ? 1 : 0; }
 /* ordem das seções da loja: cristais, incensos, acessórios */
-function catOrdem(p) { return p && p.categoria === 'cristal' ? 0 : (p && p.categoria === 'incenso' ? 1 : 2); }
+function catOrdem(cats, p) { const i = cats.findIndex(c => c.id === (p && p.categoria)); return i < 0 ? cats.length : i; }
+function catNome(cats, p) { const c = cats[catOrdem(cats, p)]; return c ? c.nome : 'Objetos de ritual'; }
+/* texto de abertura da seção: texto simples; [texto](/endereco) vira link */
+function introCat(t) { t = String(t || '').trim(); return t ? '<p class="lj-sec-intro">' + esc(t).replace(/\[([^\]]+)\]\(((?:\/|https:\/\/)[^)\s]*)\)/g, '<a href="$2">$1</a>') + '</p>' : ''; }
 /* imagem ilustrativa (enquanto não há foto da peça): fica fora do Google Shopping */
 function ilustrativa(u) { return /\/img\/loja\/ilus-/.test(String(u || '')); }
 /* "Também na loja": primeiro o que dá para comprar agora */
 function relacionados(d, p) { return d.produtos.filter(x => x.slug !== p.slug).map((x, i) => [x, i]).sort((a, b) => (disponivel(b[0]) - disponivel(a[0])) || (a[1] - b[1])).slice(0, 3).map(x => x[0]); }
 /* foto da prévia do link da loja: a primeira peça à venda com foto de verdade */
 function capaLoja(d) { const p = d.produtos.filter(x => disponivel(x) && !ilustrativa(foto(d, x, null)))[0] || d.produtos[0]; return p ? foto(d, p, null) : ''; }
-const INTRO_INCENSOS = '<p class="lj-sec-intro">Incensos indianos para perfumar a casa e marcar o início da meditação. Cada aroma é um produto: escolha os seus e adicione ao carrinho.</p>';
 function gradeLoja(d) {
-  const card = p => cardProduto(d, p), secs = [['Cristais', INTRO_CRISTAIS, 'cristais'], ['Incensos', INTRO_INCENSOS, 'incensos'], ['Acessórios e complementos', '', 'acessorios']];
-  const grupos = [[], [], []];
-  d.produtos.forEach(p => grupos[catOrdem(p)].push(p));
+  const card = p => cardProduto(d, p), grupos = d.cats.map(() => []).concat([[]]);
+  d.produtos.forEach(p => grupos[catOrdem(d.cats, p)].push(p));
   if (grupos.filter(g => g.length).length < 2) return '<div class="lj-grade">' + d.produtos.map(card).join('') + '</div>';
-  return grupos.map((g, i) => g.length ? '<h2 class="lj-sec" id="' + secs[i][2] + '">' + secs[i][0] + '</h2>' + secs[i][1] + '<div class="lj-grade">' + g.map(card).join('') + '</div>' : '').join('');
+  return grupos.map((g, i) => { const c = d.cats[i] || { id: 'outros', nome: 'Mais da loja', intro: '' };
+    return g.length ? '<h2 class="lj-sec" id="' + esc(c.id) + '">' + esc(c.nome) + '</h2>' + introCat(c.intro) + '<div class="lj-grade">' + g.map(card).join('') + '</div>' : ''; }).join('');
 }
 function foto(d, p, v) {
   if (v && v.img) return v.img;
@@ -451,11 +461,11 @@ async function feed() {
   d.produtos.forEach(p => {
     const vs = p.variantes || [], desc = texto(p.texto || p.seo_descricao || p.frase);
     if (!vs.length) {
-      itens.push(item({ id: p.slug, titulo: p.nome + ' · ARA', descricao: desc, link: DOMINIO + '/loja/' + p.slug, imagem: foto(d, p, null), extras: fotos(d, p, null).slice(1), ok: disponivel(p), preco: p.preco, tipo: cristal(p) ? 'Loja > Cristais' : (p.categoria === 'incenso' ? 'Loja > Incensos' : 'Loja > Objetos de ritual') }));
+      itens.push(item({ id: p.slug, titulo: p.nome + ' · ARA', descricao: desc, link: DOMINIO + '/loja/' + p.slug, imagem: foto(d, p, null), extras: fotos(d, p, null).slice(1), ok: disponivel(p), preco: p.preco, tipo: 'Loja > ' + catNome(d.cats, p) }));
     } else {
       vs.forEach(v => {
         itens.push(item({ id: p.slug + '-' + v.id, grupo: p.slug, titulo: p.nome + ' · ' + v.nome + ' · ARA', descricao: desc + (v.pedras ? ' Acompanha ' + v.pedras + '.' : ''),
-          link: DOMINIO + '/loja/' + p.slug + '?opcao=' + encodeURIComponent(v.id), imagem: foto(d, p, v), ok: disponivel(p) && varOk(p, v), preco: v.preco, tipo: cristal(p) ? 'Loja > Cristais' : (p.categoria === 'incenso' ? 'Loja > Incensos' : 'Loja > Objetos de ritual') }));
+          link: DOMINIO + '/loja/' + p.slug + '?opcao=' + encodeURIComponent(v.id), imagem: foto(d, p, v), ok: disponivel(p) && varOk(p, v), preco: v.preco, tipo: 'Loja > ' + catNome(d.cats, p) }));
       });
     }
   });
