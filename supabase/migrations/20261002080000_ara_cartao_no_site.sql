@@ -1,8 +1,10 @@
 -- Cartão no próprio site (formulário seguro do Mercado Pago, sem sair da página).
--- 1) ara_criar_pagamento com metodo = 'cartao' só cria o pedido e devolve o total.
+-- 1) ara_criar_pagamento com metodo = 'cartao' e no_site = true só cria o pedido e devolve o total.
 -- 2) O formulário do Mercado Pago gera o token do cartão no navegador (os dados do cartão não passam pela ARA).
 -- 3) ara_pagar_cartao cobra o pedido com esse token. Se o cartão for recusado, o cliente tenta de novo no MESMO pedido,
 --    sem criar pedido duplicado; pedido já pago ou em análise não é cobrado de novo.
+-- Aviso do Mercado Pago: com ara_config.pagamento.avisoUrl preenchido (https://www.aracristais.com.br/api/mercadopago),
+-- todo pagamento leva o notification_url e o pedido vira "pago" sozinho, mesmo que o cliente feche a página.
 CREATE OR REPLACE FUNCTION public.ara_criar_pagamento(p jsonb)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -14,7 +16,7 @@ declare
   linhas jsonb := '[]'::jsonb; it jsonb; prod record; v jsonb; qtd int; preco numeric; nome text; est int; adic numeric;
   subtotal numeric := 0; valor_frete numeric; reg jsonb; cepd text; total numeric; pid uuid; pref jsonb;
   resp extensions.http_response; mp jsonb; parcelas int; site text := 'https://aracristais.com.br'; cup jsonb;
-  pix jsonb; email_pagador text;
+  pix jsonb; email_pagador text; aviso text;
 begin
   select valor into c_loja from ara_config where chave = 'loja';
   select valor into c_frete from ara_config where chave = 'frete';
@@ -24,6 +26,7 @@ begin
   modo := case when c_pag->>'modo' = 'teste' then 'teste' else 'producao' end;
   token := tok->>modo;
   if token is null then return jsonb_build_object('erro','Pagamento não configurado'); end if;
+  aviso := nullif(c_pag->>'avisoUrl','');
 
   if coalesce(p->>'tipo','loja') = 'arca' then
     v := c_arcas->'modelos'->(p->>'modelo');
@@ -88,14 +91,14 @@ begin
     'R$ ' || replace(to_char(total,'FM999999990.00'),'.',',') || case when valor_frete is null then ' + frete a combinar' else ' (com frete)' end,
     left(coalesce(p->>'nome',''),200), left(coalesce(p->>'whatsapp',''),40), left(coalesce(p->>'email',''),200), left(cepd,12),
     coalesce(p->'dados','{}'::jsonb) || jsonb_build_object('entrega', case when p->>'entrega' = 'express' and reg is not null and coalesce((reg->>'express')::boolean,true) and coalesce((c_frete->'express'->>'ativo')::boolean,false) then 'Motoboy Express' when reg is null then 'A combinar' else 'Coleta PEX' end)
-      || jsonb_build_object('metodo', case when p->>'metodo' in ('pix','cartao') then p->>'metodo' else 'checkout' end)
+      || jsonb_build_object('metodo', case when p->>'metodo' = 'pix' or (p->>'metodo' = 'cartao' and coalesce((p->>'no_site')::boolean, false)) then p->>'metodo' else 'checkout' end)
       || case when cup ? 'cupom' then jsonb_build_object('cupom', cup->>'cupom', 'desconto_pct', (cup->>'pct')::int) else '{}'::jsonb end, total, valor_frete,
     (select jsonb_agg((l->'ref') || jsonb_build_object('qtd',l->'quantity','preco',l->'unit_price','titulo',l->'title')) from jsonb_array_elements(linhas) l),
     'aguardando pagamento', case when modo = 'teste' then 'teste' else '' end)
   returning id into pid;
 
   -- cartão no site: o pedido nasce aqui e a cobrança vem depois, em ara_pagar_cartao, com o token do formulário do Mercado Pago
-  if p->>'metodo' = 'cartao' then
+  if p->>'metodo' = 'cartao' and coalesce((p->>'no_site')::boolean, false) then
     return jsonb_build_object('pedido_id',pid,'modo',modo,'subtotal',subtotal,'frete',valor_frete,'total',total,'parcelas',parcelas);
   end if;
 
@@ -112,6 +115,7 @@ begin
       'external_reference', pid::text,
       'statement_descriptor', 'ARA CRISTAIS',
       'payer', jsonb_build_object('email', email_pagador, 'first_name', left(split_part(coalesce(p->>'nome',''), ' ', 1), 60)));
+    if aviso is not null then pix := pix || jsonb_build_object('notification_url', aviso); end if;
     select * into resp from extensions.http(('POST', 'https://api.mercadopago.com/v1/payments',
         array[extensions.http_header('Authorization','Bearer '||token), extensions.http_header('X-Idempotency-Key', pid::text)],
         'application/json', pix::text)::extensions.http_request);
@@ -135,6 +139,7 @@ begin
     'back_urls', jsonb_build_object('success', site||'/?pagamento=aprovado', 'pending', site||'/?pagamento=pendente', 'failure', site||'/?pagamento=falhou'),
     'auto_return', 'approved',
     'payment_methods', jsonb_build_object('installments', parcelas));
+  if aviso is not null then pref := pref || jsonb_build_object('notification_url', aviso); end if;
   if coalesce(valor_frete,0) > 0 then pref := pref || jsonb_build_object('shipments', jsonb_build_object('cost', valor_frete, 'mode', 'not_specified')); end if;
   if coalesce(p->>'email','') ~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then pref := pref || jsonb_build_object('payer', jsonb_build_object('email', p->>'email')); end if;
 
@@ -158,7 +163,7 @@ CREATE OR REPLACE FUNCTION public.ara_pagar_cartao(p_pedido uuid, p_cartao jsonb
 AS $function$
 declare
   c_loja jsonb; c_arcas jsonb; c_pag jsonb; tok jsonb; modo text; token text; ped record; parcelas int; inst int;
-  body jsonb; resp extensions.http_response; mp jsonb; st text; novo text; email_pagador text; ident jsonb;
+  body jsonb; resp extensions.http_response; mp jsonb; st text; novo text; email_pagador text; ident jsonb; aviso text;
 begin
   select * into ped from ara_pedidos where id = p_pedido for update;
   if not found then return jsonb_build_object('erro','Pedido não encontrado'); end if;
@@ -195,6 +200,8 @@ begin
     'payer', jsonb_build_object('email', email_pagador)
        || case when ident is not null and coalesce(ident->>'number','') <> '' then jsonb_build_object('identification', ident) else '{}'::jsonb end);
   if coalesce(p_cartao->>'issuer_id','') <> '' then body := body || jsonb_build_object('issuer_id', p_cartao->>'issuer_id'); end if;
+  aviso := nullif(c_pag->>'avisoUrl','');
+  if aviso is not null then body := body || jsonb_build_object('notification_url', aviso); end if;
 
   perform extensions.http_set_curlopt('CURLOPT_TIMEOUT', '30');
   select * into resp from extensions.http(('POST', 'https://api.mercadopago.com/v1/payments',

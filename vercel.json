@@ -27,6 +27,9 @@
     },
     "api/feed.js": {
       "includeFiles": "index.html"
+    },
+    "api/mercadopago.js": {
+      "includeFiles": "index.html"
     }
   },
   "headers": [

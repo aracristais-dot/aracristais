@@ -1296,7 +1296,7 @@ async function ljPagar(metodo){if(ljOcupado)return;var d=ljDados();if(!d)return;
  if(ab&&ab.chave===chave&&ab.metodo===metodo&&noSite){if(metodo==='pix')ljPixMostrar(ab);else ljCartaoMostrar(ab);return;}
  var btn=document.getElementById(metodo==='pix'?'lj-enviar':'lj-cartao'),txt=btn.textContent;ljOcupado=true;btn.disabled=true;btn.textContent=metodo==='pix'?'Gerando o Pix...':'Abrindo o pagamento...';
  function falhou(m){er.textContent=m||'Não foi possível abrir o pagamento agora. Use o WhatsApp.';ljOcupado=false;btn.disabled=false;btn.textContent=txt;}
- try{var r=await araSB.rpc('ara_criar_pagamento',{p:{tipo:'loja',metodo:noSite?metodo:'checkout',itens:ljItens().map(function(x){return {slug:x.p.slug,variante:x.v?x.v.id:null,qtd:x.l.qtd,adicional:x.add,intencao:x.add?x.l.intencao:''};}),cep:d.cep,nome:d.nome,whatsapp:d.whatsapp,email:d.email,entrega:ljEntrega,cupom:ARA_CUPOM?ARA_CUPOM.cupom:'',dados:{origem:'site'}}});
+ try{var r=await araSB.rpc('ara_criar_pagamento',{p:{tipo:'loja',metodo:noSite?metodo:'checkout',no_site:noSite,itens:ljItens().map(function(x){return {slug:x.p.slug,variante:x.v?x.v.id:null,qtd:x.l.qtd,adicional:x.add,intencao:x.add?x.l.intencao:''};}),cep:d.cep,nome:d.nome,whatsapp:d.whatsapp,email:d.email,entrega:ljEntrega,cupom:ARA_CUPOM?ARA_CUPOM.cupom:'',dados:{origem:'site'}}});
   if(r.data&&r.data.erro&&/cupom/i.test(r.data.erro)){araCupomInvalido();ljResumo();}
   if(r.error||!r.data||r.data.erro){falhou(r.data&&r.data.erro);return;}
   /* trocou de caminho ou de carrinho: o pedido anterior, ainda sem pagamento, sai da lista para não ficar em dobro */

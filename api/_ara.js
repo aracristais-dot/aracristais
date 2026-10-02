@@ -76,6 +76,24 @@ async function sb(tabela, query) {
   } finally { clearTimeout(t); }
 }
 
+/* chama uma função do banco (RPC) com a chave pública do site */
+async function rpc(nome, args, ms) {
+  const html = template();
+  const url = (html.match(/var ARA_SB_URL='([^']+)'/) || [])[1];
+  const key = (html.match(/var ARA_SB_KEY='([^']+)'/) || [])[1];
+  if (!url || !key) return null;
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), ms || 15000);
+  try {
+    const r = await fetch(url + '/rest/v1/rpc/' + nome, { method: 'POST', headers: { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' }, body: JSON.stringify(args || {}), signal: ctl.signal });
+    if (!r.ok) { console.warn('ARA rpc ' + nome + ': HTTP ' + r.status); return null; }
+    return await r.json();
+  } catch (e) {
+    console.warn('ARA rpc ' + nome + ': ' + e.message);
+    return null;
+  } finally { clearTimeout(t); }
+}
+
 let _cache = null, _cacheEm = 0;
 async function dados() {
   if (_cache && Date.now() - _cacheEm < 60000) return _cache;
@@ -439,4 +457,4 @@ async function feed() {
     itens.filter(Boolean).join('\n') + '\n</channel></rss>\n';
 }
 
-module.exports = { renderizar, sitemap, feed, template, prepararTemplate, DOMINIO };
+module.exports = { renderizar, sitemap, feed, template, prepararTemplate, rpc, DOMINIO };
