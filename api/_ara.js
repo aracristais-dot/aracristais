@@ -233,7 +233,10 @@ function cardProduto(d, p) {
 function htmlProduto(d, p, v) {
   const disp = disponivel(p), vs = p.variantes || [], mx = Number((d.cfg.loja && d.cfg.loja.parcelasMax) || 1);
   const preco = v ? Number(v.preco) : Number(p.preco);
-  const det = (p.detalhes || []).map(x => '<li><span>' + esc(x.k) + '</span><span>' + esc(x.v) + '</span></li>').join('');
+  const DESTAQUE = ['Significado', 'Para que serve', 'Exclusividade'];
+  const det = (p.detalhes || []).filter(x => DESTAQUE.indexOf(x.k) < 0).map(x => '<li><span>' + esc(x.k) + '</span><span>' + esc(x.v) + '</span></li>').join('');
+  const sig = (p.detalhes || []).filter(x => x.k === 'Significado' || x.k === 'Para que serve').map(x => '<p><b>' + esc(x.k) + '</b>' + esc(x.v) + '</p>').join('');
+  const unica = (p.detalhes || []).filter(x => x.k === 'Exclusividade')[0];
   const vars = vs.map(x => '<button type="button" aria-pressed="' + (x === v) + '"' + (varOk(p, x) ? '' : ' disabled') + '>' + esc(mesmoPreco(p) ? x.nome : x.nome + ' · ' + brl0(x.preco)) + (varOk(p, x) ? '' : ' · esgotado') + '</button>').join('');
   const rel = relacionados(d, p).map(x => cardProduto(d, x)).join('');
   const wa = t => 'https://wa.me/' + esc(whats(d)) + '?text=' + encodeURIComponent(t);
@@ -242,7 +245,7 @@ function htmlProduto(d, p, v) {
     (fotos(d, p, v).length > 1 ? '<div class="lj-thumbs" id="lj-thumbs">' + fotos(d, p, v).map((u, i) => '<button type="button" data-foto="' + i + '" aria-label="Foto ' + (i + 1) + '"' + (i ? '' : ' aria-current="true"') + '><img src="' + esc(u) + '" alt="" loading="lazy"></button>').join('') + '</div>' : '') +
     '<p class="lj-ilus" id="lj-ilus"' + (ilustrativa(foto(d, p, v)) ? '' : ' hidden') + '>' + (cristal(p) ? 'Imagem ilustrativa. Cada cristal é único: peça pelo WhatsApp as fotos do seu.' : 'Imagem ilustrativa. Peça pelo WhatsApp as fotos da peça.') + '</p></div><div class="lj-info">' +
     (p.tag ? '<span class="m-tag">' + esc(p.tag) + '</span>' : '') + '<h1>' + esc(p.nome) + '</h1>' + (p.frase ? '<p class="lj-frase-g">' + esc(p.frase) + '</p>' : '') +
-    '<p class="lj-preco-g"><span id="lj-preco">' + brl0(preco) + '</span><small id="lj-parc">' + (mx > 1 ? 'ou em até ' + mx + 'x de ' + brl2(preco / mx) + ' sem juros' : '') + '</small></p>' + paragrafos(p.texto) +
+    '<p class="lj-preco-g"><span id="lj-preco">' + brl0(preco) + '</span><small id="lj-parc">' + (mx > 1 ? 'ou em até ' + mx + 'x de ' + brl2(preco / mx) + ' sem juros' : '') + '</small></p>' + (unica ? '<p class="lj-unica">' + esc(unica.v) + '</p>' : '') + paragrafos(p.texto) + (sig ? '<div class="lj-sig">' + sig + '</div>' : '') +
     (vars ? '<div><span class="muted" style="font-size:14px">' + esc(p.rotulo || 'Opção') + '</span><div class="lj-var" style="margin-top:8px">' + vars + '</div>' + (v && v.pedras ? '<p class="lj-pedras">Acompanha ' + esc(v.pedras) + '.</p>' : '') + '</div>' : '') +
     '<div class="lj-acoes">' + (disp ? '<button class="btn btn-champ" type="button">Adicionar ao carrinho</button><button class="btn btn-vazado" type="button">Comprar agora</button>' : '<button class="btn btn-champ" type="button" disabled style="opacity:.45">Esgotado</button>') + '</div>' +
     (disp ? '' : '<p class="lj-indisp">Esgotado no momento. <a href="' + wa('Olá! Quero um aviso quando chegar: ' + p.nome + '.') + '" target="_blank" rel="noopener">Avise-me quando chegar</a></p>') +
