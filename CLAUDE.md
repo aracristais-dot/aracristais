@@ -7,7 +7,11 @@
 - Peça natural com uma unidade só: `estoque = 1`.
 
 ## Preço das pedras e cristais (planilha de compra)
-Sempre que chegar uma planilha de compra, o preço de venda segue esta régua, definida pelo dono:
+Sempre que chegar uma planilha de compra:
+- **Se ela tiver a coluna "VALOR DE VENDA", use exatamente esse valor.** É o preço que o dono já definiu.
+- Só quando essa coluna faltar (ou estiver vazia numa linha), calcule pela régua abaixo.
+
+Régua do dono:
 1. Parta do "Preço de venda sugerido" da planilha (custo real × 3, terminado em ,90).
 2. Arredonde **para cima**, para um valor redondo: em geral o próximo múltiplo de R$ 10 (27,90 → 30; 54,90 → 60; 108,90 → 110; 97,90 → 100).
 3. Nunca trabalhe no preço limite: a loja dá desconto no Pix e para quem se cadastra, então o preço cheio precisa ter folga para essa régua de descontos.
