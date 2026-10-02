@@ -1122,18 +1122,22 @@ function araBotaoCard(p){if(!araDisp(p))return '';if((p.variantes||[]).length)re
 function araCardProduto(p){var real=araFotoReal(p,null);
  return '<div class="lj-card"><a class="lj-item" href="/loja/'+araEsc(p.slug)+'"><div class="lj-foto'+(real?' real':'')+'"><img src="'+araEsc(araFoto(p,null))+'" alt="'+araEsc(p.nome)+'" loading="lazy"></div>'+
  (p.tag?'<span class="lj-tag">'+araEsc(p.tag)+'</span>':'')+'<h3>'+araEsc(p.nome)+'</h3><span class="lj-preco">'+araEsc(araTextoPreco(p))+'</span>'+(p.frase?'<p class="lj-frase">'+araEsc(p.frase)+'</p>':'')+'</a>'+araBotaoCard(p)+'</div>';}
-var ARA_INTRO_CRISTAIS='<p class="lj-sec-intro">Os cristais se formam ao longo de milhões de anos e acompanham a humanidade desde os sumérios. <a href="/historia#linha-do-tempo">Conheça essa história</a>, que também dá nome às peças da ARA.</p>';
 /* produtos que mudaram de nome: o endereço antigo leva ao novo */
 var ARA_ENDERECOS_ANTIGOS={'incenso-shankar-massala':'incenso-shankar-nag-champa','ara-santuario':'caixa-relicario','ara-porta-cristais':'estojo-travessia','quartzo-rosa-bruto':'cristal-de-quartzo','drusa-de-citrino':'pulseira-de-citrino','geodo-branco':'geodo-marroquino'};
 /* cristais vêm primeiro na loja; o resto é acessório e complemento */
 function araCristal(p){return p&&p.categoria==='cristal'?1:0;}
 /* ordem das seções da loja: cristais, incensos, acessórios */
-function araCatOrdem(p){return p&&p.categoria==='cristal'?0:(p&&p.categoria==='incenso'?1:2);}
+/* categorias da loja: vêm da retaguarda (ara_config 'categorias'), na ordem em que aparecem; esta é a reserva */
+var ARA_CATS_PADRAO=[{id:'cristal',nome:'Cristais',intro:'Os cristais se formam ao longo de milhões de anos e acompanham a humanidade desde os sumérios. [Conheça essa história](/historia#linha-do-tempo), que também dá nome às peças da ARA.'},{id:'acessorio',nome:'Acessórios e complementos',intro:''},{id:'incenso',nome:'Incensos',intro:'Incensos indianos para perfumar a casa e marcar o início da meditação. Cada aroma é um produto: escolha os seus e adicione ao carrinho.'}];
+function araCats(){var c=ARA.categorias;return Array.isArray(c)&&c.length?c:ARA_CATS_PADRAO;}
+function araCatOrdem(p){var cs=araCats(),id=p&&p.categoria;for(var i=0;i<cs.length;i++){if(cs[i].id===id)return i;}return cs.length;}
+/* texto de abertura da seção: texto simples; [texto](/endereco) vira link */
+function araIntroCat(t){t=String(t||'').trim();if(!t)return '';return '<p class="lj-sec-intro">'+araEsc(t).replace(/\[([^\]]+)\]\(((?:\/|https:\/\/)[^)\s]*)\)/g,'<a href="$2">$1</a>')+'</p>';}
 function araAtivos(){return ARA.produtos.filter(function(p){return p.ativo!==false;}).sort(function(a,b){return (araCatOrdem(a)-araCatOrdem(b))||((a.ordem||0)-(b.ordem||0));});}
-function araGradeLoja(lista,agrupar){var secs=[['Cristais',ARA_INTRO_CRISTAIS,'cristais'],['Incensos','<p class="lj-sec-intro">Incensos indianos para perfumar a casa e marcar o início da meditação. Cada aroma é um produto: escolha os seus e adicione ao carrinho.</p>','incensos'],['Acessórios e complementos','','acessorios']];
- var grupos=[[],[],[]];lista.forEach(function(p){grupos[araCatOrdem(p)].push(p);});
+function araGradeLoja(lista,agrupar){var cs=araCats(),grupos=cs.map(function(){return [];}).concat([[]]);
+ lista.forEach(function(p){grupos[araCatOrdem(p)].push(p);});
  if(!agrupar||grupos.filter(function(g){return g.length;}).length<2)return '<div class="lj-grade">'+lista.map(araCardProduto).join('')+'</div>';
- return grupos.map(function(g,i){return g.length?'<h2 class="lj-sec" id="'+secs[i][2]+'">'+secs[i][0]+'</h2>'+secs[i][1]+'<div class="lj-grade">'+g.map(araCardProduto).join('')+'</div>':'';}).join('');}
+ return grupos.map(function(g,i){var c=cs[i]||{id:'outros',nome:'Mais da loja',intro:''};return g.length?'<h2 class="lj-sec" id="'+araEsc(c.id)+'">'+araEsc(c.nome)+'</h2>'+araIntroCat(c.intro)+'<div class="lj-grade">'+g.map(araCardProduto).join('')+'</div>':'';}).join('');}
 /* "Também na loja": primeiro o que dá para comprar agora */
 function araRelacionados(p){return araAtivos().filter(function(x){return x.slug!==p.slug;}).map(function(x,i){return [x,i];}).sort(function(a,b){return (araDisp(b[0])-araDisp(a[0]))||(a[1]-b[1]);}).slice(0,3).map(function(x){return x[0];});}
 function araLojaLista(){document.getElementById('lj-lista').hidden=false;document.getElementById('lj-produto').hidden=true;
