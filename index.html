@@ -421,7 +421,13 @@ footer .humano{margin-top:14px;font-size:14px;color:var(--champ)}
 .campo[hidden],[hidden].campo{display:none!important}
 .lj-frete{font-size:14px;color:var(--champ-2);min-height:18px;display:block}
 .lj-seguro{margin-top:12px;font-size:13px;color:var(--nevoa);text-align:center}
-#lj-zap{margin-top:10px;width:100%}
+.lj-zap-lnk{display:block;margin:14px auto 0}
+.lj-pix-total{margin-top:10px;font-size:17px}.lj-pix-total b{font:500 24px var(--serif);color:var(--champ)}
+.lj-pix-passos{margin:14px 0 4px 18px;color:var(--nevoa);font-size:15px;line-height:1.6}.lj-pix-passos b{color:var(--txt);font-weight:500}
+.lj-pix textarea{width:100%;margin-top:12px;background:var(--noite);border:1px solid rgba(233,220,192,.22);color:var(--nevoa);border-radius:10px;padding:10px 12px;font:300 12px/1.4 monospace;resize:none;word-break:break-all}
+.lj-pix img[hidden]{display:none}
+.lj-pix img{display:block;margin:16px auto 0;width:220px;height:220px;background:#fff;border-radius:12px;padding:8px}
+.lj-pix-st{margin-top:14px;text-align:center;color:var(--champ-2);font-size:15px}.lj-pix-st.ok{color:#9fe3b0;font-weight:500}
 .lj-ultimas{font-size:14px;color:#f0c9a8}
 .lj-var button:disabled{opacity:.35;cursor:default;text-decoration:line-through}
 #lj-ok .acoes{display:flex;flex-direction:column;gap:12px;margin-top:22px}#lj-ok .acoes .btn{width:100%}
@@ -943,10 +949,21 @@ document.querySelectorAll('[data-wa]').forEach(a=>{a.href=wa(a.dataset.wa);a.tar
    <div class="campo"><label for="lj-email">Seu e-mail <small>opcional</small></label><input id="lj-email" type="email" autocomplete="email"></div>
    <div class="cupom-box" data-cupom-box></div>
    <p class="erro" id="lj-erro" role="alert"></p>
-   <button class="btn btn-champ enviar" type="submit" id="lj-enviar">Pagar com Mercado Pago</button>
-   <button class="btn btn-vazado enviar" type="button" id="lj-zap">Prefiro combinar pelo WhatsApp</button>
-   <p class="lj-seguro">Pagamento seguro pelo Mercado Pago: Pix, cartão em até <span id="lj-parc-max">6</span>x ou boleto. Atendimento 100% humanizado, antes e depois da compra.</p>
+   <button class="btn btn-champ enviar" type="submit" id="lj-enviar">Pagar com Pix</button>
+   <button class="btn btn-vazado enviar" type="button" id="lj-cartao">Pagar com cartão de crédito</button>
+   <button class="lnk lj-zap-lnk" type="button" id="lj-zap">Prefiro combinar pelo WhatsApp</button>
+   <p class="lj-seguro">Pagamento seguro pelo Mercado Pago. No Pix, o código aparece aqui mesmo: é só copiar e colar no app do seu banco. Cartão em até <span id="lj-parc-max">6</span>x. Atendimento 100% humanizado, antes e depois da compra.</p>
   </form>
+ </div>
+ <div id="lj-pix" class="lj-pix" hidden>
+  <div class="top"><h3>Pague com Pix</h3><button class="x" type="button" data-ljfechar aria-label="Fechar">×</button></div>
+  <p class="lj-pix-total">Total: <b id="lj-pix-valor"></b></p>
+  <ol class="lj-pix-passos"><li>Toque em <b>Copiar código Pix</b>.</li><li>Abra o app do seu banco, escolha <b>Pix copia e cola</b> e cole o código.</li><li>Confirme o pagamento. Esta tela avisa assim que o Pix cair.</li></ol>
+  <button class="btn btn-champ enviar" type="button" id="lj-pix-copiar">Copiar código Pix</button>
+  <textarea id="lj-pix-cod" readonly rows="3" aria-label="Código Pix copia e cola"></textarea>
+  <img id="lj-pix-qr" alt="QR Code do Pix" width="220" height="220">
+  <p class="lj-pix-st" id="lj-pix-st" role="status">Aguardando o pagamento...</p>
+  <p class="lj-seguro">O código vale por 30 minutos. Pedido <span id="lj-pix-ped"></span>. Dúvidas? <a id="lj-pix-wa" href="#" target="_blank" rel="noopener">Fale com a gente pelo WhatsApp</a>.</p>
  </div>
  <div class="ok" id="lj-ok">
   <div class="top" style="justify-content:flex-end"><button class="x" type="button" data-ljfechar aria-label="Fechar">×</button></div>
@@ -1228,7 +1245,7 @@ function ljResumo(){var its=ljItens(),bruto=its.reduce(function(s,x){return s+x.
  document.getElementById('lj-parc-max').textContent=ARA.loja.parcelasMax||6;}
 document.getElementById('lj-cep').addEventListener('input',function(){ljResumo();});
 function ljPode(){var ls=araCarLinhas();return ls.length>0&&ls.every(function(x){return x.ok;});}
-function ljAbrir(){if(!ljPode()){araCarAbrir();return;}ljEntrega='pex';document.getElementById('lj-frete').dataset.h='';ljResumo();document.getElementById('lj-pf').style.display='block';document.getElementById('lj-ok').style.display='none';document.getElementById('lj-modal').classList.add('open');document.body.style.overflow='hidden';araTrack('checkout_inicio','loja');}
+function ljAbrir(){if(!ljPode()){araCarAbrir();return;}ljEntrega='pex';document.getElementById('lj-frete').dataset.h='';ljResumo();ljTela('lj-pf');document.getElementById('lj-modal').classList.add('open');document.body.style.overflow='hidden';araTrack('checkout_inicio','loja');}
 function ljFechar(){document.getElementById('lj-modal').classList.remove('open');document.body.style.overflow='';}
 document.querySelectorAll('[data-ljfechar]').forEach(function(b){b.addEventListener('click',ljFechar);});
 document.getElementById('lj-modal').addEventListener('click',function(e){if(e.target.id==='lj-modal')ljFechar();});
@@ -1240,25 +1257,50 @@ function ljDados(){var er=document.getElementById('lj-erro');er.textContent='';
  if(nome.length<2){er.textContent='Escreva o seu nome.';return null;}
  if(wz.replace(/\D/g,'').length<10){er.textContent='Escreva um WhatsApp com DDD.';return null;}
  return {nome:nome,whatsapp:wz,cep:cep,email:em,item:ljTexto()};}
-document.getElementById('lj-form').addEventListener('submit',async function(e){e.preventDefault();var d=ljDados();if(!d)return;
- var er=document.getElementById('lj-erro');var fr=araFrete(d.cep,araCarSub());araTrack('checkout','loja');
+/* pagamento: Pix aparece aqui mesmo (QR Code e copia e cola); cartão vai para o checkout do Mercado Pago */
+var ljPixTimer=null;
+function ljPixParar(){if(ljPixTimer){clearInterval(ljPixTimer);ljPixTimer=null;}}
+function ljTela(qual){['lj-pf','lj-pix','lj-ok'].forEach(function(id){var el=document.getElementById(id);if(id==='lj-pix')el.hidden=(qual!==id);else el.style.display=(qual===id?'block':'none');});}
+async function ljPagar(metodo){var d=ljDados();if(!d)return;
+ var er=document.getElementById('lj-erro');var fr=araFrete(d.cep,araCarSub());araTrack('checkout','loja/'+metodo);
  if(String(d.cep).replace(/\D/g,'').length!==8){er.textContent='Digite o CEP de entrega.';return;}
  if(fr&&fr.fora){er.textContent=(ARA.frete&&ARA.frete.foraDaArea)||'Para esse CEP, o frete é combinado pelo WhatsApp.';return;}
  if(!araSB){er.textContent='Não foi possível abrir o pagamento agora. Use o WhatsApp.';return;}
- var btn=document.getElementById('lj-enviar');btn.disabled=true;btn.textContent='Abrindo o Mercado Pago...';
- try{var r=await araSB.rpc('ara_criar_pagamento',{p:{tipo:'loja',itens:ljItens().map(function(x){return {slug:x.p.slug,variante:x.v?x.v.id:null,qtd:x.l.qtd,adicional:x.add,intencao:x.add?x.l.intencao:''};}),cep:d.cep,nome:d.nome,whatsapp:d.whatsapp,email:d.email,entrega:ljEntrega,cupom:ARA_CUPOM?ARA_CUPOM.cupom:'',dados:{origem:'site'}}});
+ var btn=document.getElementById(metodo==='pix'?'lj-enviar':'lj-cartao'),txt=btn.textContent;btn.disabled=true;btn.textContent=metodo==='pix'?'Gerando o Pix...':'Abrindo o pagamento...';
+ function falhou(m){er.textContent=m||'Não foi possível abrir o pagamento agora. Use o WhatsApp.';btn.disabled=false;btn.textContent=txt;}
+ try{var r=await araSB.rpc('ara_criar_pagamento',{p:{tipo:'loja',metodo:metodo,itens:ljItens().map(function(x){return {slug:x.p.slug,variante:x.v?x.v.id:null,qtd:x.l.qtd,adicional:x.add,intencao:x.add?x.l.intencao:''};}),cep:d.cep,nome:d.nome,whatsapp:d.whatsapp,email:d.email,entrega:ljEntrega,cupom:ARA_CUPOM?ARA_CUPOM.cupom:'',dados:{origem:'site'}}});
   if(r.data&&r.data.erro&&/cupom/i.test(r.data.erro)){araCupomInvalido();ljResumo();}
-  if(r.error||!r.data||r.data.erro||!r.data.init_point){er.textContent=(r.data&&r.data.erro)||'Não foi possível abrir o pagamento agora. Use o WhatsApp.';btn.disabled=false;btn.textContent='Pagar com Mercado Pago';return;}
+  if(r.error||!r.data||r.data.erro){falhou(r.data&&r.data.erro);return;}
   try{localStorage.setItem('ara_carrinho_pago',JSON.stringify(ARA_CAR));}catch(x){}
+  if(metodo==='pix'){if(!r.data.pix_codigo){falhou('Não foi possível gerar o Pix agora. Tente o cartão ou o WhatsApp.');return;}btn.disabled=false;btn.textContent=txt;ljPixMostrar(r.data,d);return;}
+  if(!r.data.init_point){falhou();return;}
   window.location.href=r.data.init_point;}
- catch(err){er.textContent='Não foi possível abrir o pagamento agora. Use o WhatsApp.';btn.disabled=false;btn.textContent='Pagar com Mercado Pago';}});
+ catch(err){falhou();}}
+function ljPixMostrar(res,d){var ped=String(res.pedido_id||'').slice(0,8).toUpperCase();
+ document.getElementById('lj-pix-valor').textContent=araBRL2(res.total);
+ document.getElementById('lj-pix-cod').value=res.pix_codigo;
+ var qr=document.getElementById('lj-pix-qr');if(res.pix_qr){qr.src='data:image/png;base64,'+res.pix_qr;qr.hidden=false;}else{qr.hidden=true;}
+ document.getElementById('lj-pix-ped').textContent=ped;
+ document.getElementById('lj-pix-wa').href=araWa('Olá! Fiz o pedido '+ped+' no site da ARA e vou pagar com Pix.');
+ var st=document.getElementById('lj-pix-st');st.textContent='Aguardando o pagamento...';st.classList.remove('ok');
+ ljTela('lj-pix');ljPixParar();var t0=Date.now();
+ ljPixTimer=setInterval(async function(){if(Date.now()-t0>35*60*1000){ljPixParar();st.textContent='O código expirou. Feche e gere um novo Pix.';return;}
+  try{var c=await araSB.rpc('ara_confirmar_pagamento',{p_pedido:res.pedido_id,p_payment_id:res.payment_id||null});
+   if(c.data&&c.data.mp==='approved'){ljPixParar();st.textContent='Pagamento confirmado! Obrigado. Vamos falar com você pelo WhatsApp para combinar a entrega.';st.classList.add('ok');araTrack('pix_pago','loja');try{localStorage.removeItem('ara_carrinho_pago');}catch(x){}araCarLimpar();}}catch(x){}},5000);}
+document.getElementById('lj-pix-copiar').addEventListener('click',async function(){var c=document.getElementById('lj-pix-cod'),b=this;
+ try{await navigator.clipboard.writeText(c.value);}catch(e){c.focus();c.select();try{document.execCommand('copy');}catch(x){}}
+ b.textContent='Código copiado! Agora cole no app do banco';setTimeout(function(){b.textContent='Copiar código Pix';},4000);});
+document.getElementById('lj-form').addEventListener('submit',function(e){e.preventDefault();ljPagar('pix');});
+document.getElementById('lj-cartao').addEventListener('click',function(){ljPagar('cartao');});
+document.querySelectorAll('[data-ljfechar]').forEach(function(b){b.addEventListener('click',ljPixParar);});
+/* WhatsApp: cada peça com o preço e o link, para a loja saber exatamente qual é */
 document.getElementById('lj-zap').addEventListener('click',async function(){var d=ljDados();if(!d)return;var total=araCarSub(),cpTxt=ARA_CUPOM?ARA_CUPOM.cupom+' ('+ARA_CUPOM.pct+'% OFF)':'';
- var linhas=ljItens().map(function(x){return x.l.qtd+' x '+x.nome+(x.add?' + cristais da intenção ('+(x.l.intencao||'')+')':'');});
- var msg=['Olá! Quero comprar na loja ARA:',''].concat(linhas,[''],[cpTxt?'Cupom: '+cpTxt:'','Total: '+araBRL2(total)+' + frete',d.cep?'CEP: '+d.cep:'',ljEntrega==='express'?'Entrega: Motoboy Express':'','Nome: '+d.nome].filter(Boolean)).join('\n');
- araPedido('loja',d.item,araBRL2(total)+' + frete',d.nome,d.whatsapp,Object.assign({cep:d.cep,quantidade:araCarQtd(),caminho:'whatsapp'},ARA_CUPOM?{cupom:ARA_CUPOM.cupom,desconto_pct:ARA_CUPOM.pct}:{}));
- try{fetch('https://formsubmit.co/ajax/'+CONFIG.emailPedidos,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({_subject:'Pedido loja ARA: '+d.item.slice(0,80),_template:'table',Produtos:d.item,Cupom:cpTxt||'-',Total:araBRL2(total)+' + frete',Nome:d.nome,WhatsApp:d.whatsapp,CEP:d.cep||'-'})});}catch(err){}
- document.getElementById('lj-ok-wa').href=araWa(msg);document.getElementById('lj-pf').style.display='none';document.getElementById('lj-ok').style.display='block';araCarLimpar();});
-
+ var cod=Math.random().toString(36).slice(2,8).toUpperCase();var fr=araFreteEscolhido(araFrete(d.cep,total));
+ var linhas=[];ljItens().forEach(function(x){linhas.push('• '+x.l.qtd+' x '+x.nome+(x.add?' com cristais da intenção ('+(x.l.intencao||'')+')':'')+' · '+araBRL2(araComCupom(x.un)*x.l.qtd));linhas.push('  '+ARA_DOMINIO+'/loja/'+x.p.slug+(x.v?'?opcao='+encodeURIComponent(x.v.id):''));});
+ var msg=['Olá! Quero comprar na loja ARA (pedido '+cod+'):',''].concat(linhas,[''],[cpTxt?'Cupom: '+cpTxt:'','Total das peças: '+araBRL2(total)+(fr&&!fr.fora?'\nFrete ('+fr.nome+'): '+araBRL2(fr.valor)+'\nTotal com frete: '+araBRL2(total+fr.valor):' (frete à parte)'),d.cep?'CEP: '+d.cep:'',ljEntrega==='express'?'Entrega: Motoboy Express':'','Nome: '+d.nome,'','Pode me mandar o Pix?'].filter(function(x,i,a){return x!==''||i===a.length-2;})).join('\n');
+ araPedido('loja',d.item,araBRL2(total)+' (frete à parte)',d.nome,d.whatsapp,Object.assign({cep:d.cep,quantidade:araCarQtd(),caminho:'whatsapp',codigo:cod},ARA_CUPOM?{cupom:ARA_CUPOM.cupom,desconto_pct:ARA_CUPOM.pct}:{}));
+ try{fetch('https://formsubmit.co/ajax/'+CONFIG.emailPedidos,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({_subject:'Pedido loja ARA '+cod+': '+d.item.slice(0,80),_template:'table',Pedido:cod,Produtos:d.item,Cupom:cpTxt||'-',Total:araBRL2(total)+' (frete à parte)',Nome:d.nome,WhatsApp:d.whatsapp,CEP:d.cep||'-'})});}catch(err){}
+ document.getElementById('lj-ok-wa').href=araWa(msg);ljTela('lj-ok');araCarLimpar();});
 /* ---------- "Complete o seu santuário": acessórios da loja no mesmo pedido da Arca ---------- */
 function araExtrasRender(){var box=document.getElementById('f-extras');if(!box)return;var lista=araAtivos().filter(araDisp);
  var marc={};document.querySelectorAll('#f-extras-lista label').forEach(function(l){var c=l.querySelector('input[type=checkbox]'),s=l.querySelector('select');if(c&&c.checked)marc[l.dataset.slug]=s?s.value:true;});
