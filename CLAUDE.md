@@ -3,6 +3,7 @@
 ## Cadastro de produtos
 - Os produtos ficam na retaguarda (Supabase, tabela `ara_produtos`). O bloco `ara-def` do `index.html` é a lista de reserva: mantenha os dois iguais.
 - Cada mudança no banco fica registrada em `supabase/migrations/`.
+- O site lê `ara_produtos` com permissão por coluna (custo e custos ficam escondidos). Coluna nova que o site lê precisa de `grant select (coluna) on public.ara_produtos to anon, authenticated`; sem isso a consulta falha e o site mostra fotos e preços antigos.
 - Foto padrão da loja: a própria peça em fundo branco, quadrada (1000 × 1000), sem etiqueta de preço, cartela ou embalagem. Fotos pequenas são ampliadas antes.
 - Peça natural com uma unidade só: `estoque = 1`.
 
