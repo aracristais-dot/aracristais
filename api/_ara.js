@@ -16,6 +16,7 @@ const SECOES = { colecao: '/arca#colecao', pedido: '/arca#pedido', obra: '/#obra
 const INTRO_CRISTAIS = '<p class="lj-sec-intro">Os cristais se formam ao longo de milhões de anos e acompanham a humanidade desde os sumérios. <a href="/historia#linha-do-tempo">Conheça essa história</a>, que também dá nome às peças da ARA.</p>';
 /* produtos que mudaram de nome: o endereço antigo leva ao novo */
 const ENDERECOS_ANTIGOS = { 'ara-santuario': 'caixa-relicario', 'ara-porta-cristais': 'estojo-travessia', 'quartzo-rosa-bruto': 'cristal-de-quartzo', 'drusa-de-citrino': 'pulseira-de-citrino', 'geodo-branco': 'geodo-marroquino' };
+const COLS_BASICAS = 'id,slug,nome,tag,frase,texto,preco,rotulo,variantes,detalhes,uso,cuidados,foto_url,disponivel,sem_adicional,ativo,ordem,seo_titulo,seo_descricao,estoque,categoria';
 const COLS_PRODUTO = 'id,slug,nome,tag,frase,texto,preco,rotulo,variantes,detalhes,uso,cuidados,foto_url,fotos,disponivel,sem_adicional,ativo,ordem,seo_titulo,seo_descricao,estoque,atualizado_em,categoria';
 const ARCA_PADRAO = {
   essencial: { nome: 'Arca Essencial', preco: 1200, medidas: '30 x 16 x 8,5 cm', prazo: '4 dias',
@@ -99,11 +100,13 @@ async function dados() {
   if (_cache && Date.now() - _cacheEm < 60000) return _cache;
   const html = template();
   const def = blocoJSON(html, 'ara-def') || { produtos: [], posts: [], ilus: {} };
-  const [prods, posts, cfg] = await Promise.all([
+  let [prods, posts, cfg] = await Promise.all([
     sb('ara_produtos', 'select=' + COLS_PRODUTO + '&order=ordem.asc'),
     sb('ara_posts', 'select=*&order=ordem.asc'),
     sb('ara_config', 'select=chave,valor'),
   ]);
+  /* coluna nova sem permissão de leitura derruba a consulta inteira: tenta só as colunas básicas antes de usar a lista de reserva */
+  if (!Array.isArray(prods)) prods = await sb('ara_produtos', 'select=' + COLS_BASICAS + '&order=ordem.asc');
   const okProd = Array.isArray(prods) && prods.length > 0, okPost = Array.isArray(posts) && posts.length > 0;
   const ordem = (a, b) => (a.ordem || 0) - (b.ordem || 0);
   const d = {
