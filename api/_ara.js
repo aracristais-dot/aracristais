@@ -15,8 +15,8 @@ const VIEWS = ['inicio', 'historia', 'arca', 'loja', 'blog'];
 const SECOES = { colecao: '/arca#colecao', pedido: '/arca#pedido', obra: '/#obra', intencoes: '/#intencoes', cristais: '/historia#cristais', 'linha-do-tempo': '/historia#linha-do-tempo' };
 const INTRO_CRISTAIS = '<p class="lj-sec-intro">Os cristais se formam ao longo de milhões de anos e acompanham a humanidade desde os sumérios. <a href="/historia#linha-do-tempo">Conheça essa história</a>, que também dá nome às peças da ARA.</p>';
 /* produtos que mudaram de nome: o endereço antigo leva ao novo */
-const ENDERECOS_ANTIGOS = { 'ara-santuario': 'caixa-relicario', 'ara-porta-cristais': 'estojo-travessia', 'quartzo-rosa-bruto': 'cristal-de-quartzo', 'drusa-de-citrino': 'pulseira-de-citrino' };
-const COLS_PRODUTO = 'id,slug,nome,tag,frase,texto,preco,rotulo,variantes,detalhes,uso,cuidados,foto_url,disponivel,sem_adicional,ativo,ordem,seo_titulo,seo_descricao,estoque,atualizado_em,categoria';
+const ENDERECOS_ANTIGOS = { 'ara-santuario': 'caixa-relicario', 'ara-porta-cristais': 'estojo-travessia', 'quartzo-rosa-bruto': 'cristal-de-quartzo', 'drusa-de-citrino': 'pulseira-de-citrino', 'geodo-branco': 'geodo-marroquino' };
+const COLS_PRODUTO = 'id,slug,nome,tag,frase,texto,preco,rotulo,variantes,detalhes,uso,cuidados,foto_url,fotos,disponivel,sem_adicional,ativo,ordem,seo_titulo,seo_descricao,estoque,atualizado_em,categoria';
 const ARCA_PADRAO = {
   essencial: { nome: 'Arca Essencial', preco: 1200, medidas: '30 x 16 x 8,5 cm', prazo: '4 dias',
     descricao: 'Mosaico de cristais naturais brasileiros montado à mão numa caixa compacta de madeira, com vidro nas laterais e tampa que abre. Criado a partir do seu nome completo e da sua data de nascimento: uma peça única.' },
@@ -144,6 +144,8 @@ function foto(d, p, v) {
   if (p.foto_url) return p.foto_url;
   return d.imgs[p.slug] || '/og-image.jpg';
 }
+/* até três fotos: a principal (ou a da opção) e outras de ângulos diferentes */
+function fotos(d, p, v) { return [foto(d, p, v)].concat(Array.isArray(p.fotos) ? p.fotos : []).filter((u, i, a) => u && a.indexOf(u) === i).slice(0, 3); }
 function fotoReal(d, p, v) { return !!((v && v.img) || (!(v && d.imgs[p.slug + '-' + v.id]) && p.foto_url)); }
 function opcaoInicial(p, pedida) {
   const vs = p.variantes || [];
@@ -218,10 +220,15 @@ function injetarDados(html, d) {
 }
 
 /* ---------- pedaços de página (mesma marcação que o site monta no navegador) ---------- */
+function botaoCard(p) {
+  if (!disponivel(p)) return '';
+  if ((p.variantes || []).length) return '<a class="lj-btn-add" href="/loja/' + esc(p.slug) + '">Escolher opção</a>';
+  return '<button class="lj-btn-add" type="button" data-add="' + esc(p.slug) + '">Adicionar ao carrinho</button>';
+}
 function cardProduto(d, p) {
-  return '<a class="lj-item" href="/loja/' + esc(p.slug) + '"><div class="lj-foto' + (fotoReal(d, p, null) ? ' real' : '') + '"><img src="' + esc(foto(d, p, null)) + '" alt="' + esc(p.nome) + '" loading="lazy"></div>' +
+  return '<div class="lj-card"><a class="lj-item" href="/loja/' + esc(p.slug) + '"><div class="lj-foto' + (fotoReal(d, p, null) ? ' real' : '') + '"><img src="' + esc(foto(d, p, null)) + '" alt="' + esc(p.nome) + '" loading="lazy"></div>' +
     (p.tag ? '<span class="lj-tag">' + esc(p.tag) + '</span>' : '') + '<h3>' + esc(p.nome) + '</h3><span class="lj-preco">' + esc(textoPreco(p)) + '</span>' +
-    (p.frase ? '<p class="lj-frase">' + esc(p.frase) + '</p>' : '') + '</a>';
+    (p.frase ? '<p class="lj-frase">' + esc(p.frase) + '</p>' : '') + '</a>' + botaoCard(p) + '</div>';
 }
 function htmlProduto(d, p, v) {
   const disp = disponivel(p), vs = p.variantes || [], mx = Number((d.cfg.loja && d.cfg.loja.parcelasMax) || 1);
@@ -232,11 +239,12 @@ function htmlProduto(d, p, v) {
   const wa = t => 'https://wa.me/' + esc(whats(d)) + '?text=' + encodeURIComponent(t);
   return '<p class="lj-crumbs"><a href="/">Início</a> / <a href="/loja">Loja</a> / ' + esc(p.nome) + '</p>' +
     '<article class="lj-prod"><div class="lj-foto-box"><div class="lj-foto' + (fotoReal(d, p, v) ? ' real' : '') + '"><img id="lj-foto-img" src="' + esc(foto(d, p, v)) + '" alt="' + esc(p.nome) + '"></div>' +
+    (fotos(d, p, v).length > 1 ? '<div class="lj-thumbs" id="lj-thumbs">' + fotos(d, p, v).map((u, i) => '<button type="button" data-foto="' + i + '" aria-label="Foto ' + (i + 1) + '"' + (i ? '' : ' aria-current="true"') + '><img src="' + esc(u) + '" alt="" loading="lazy"></button>').join('') + '</div>' : '') +
     '<p class="lj-ilus" id="lj-ilus"' + (ilustrativa(foto(d, p, v)) ? '' : ' hidden') + '>' + (cristal(p) ? 'Imagem ilustrativa. Cada cristal é único: peça pelo WhatsApp as fotos do seu.' : 'Imagem ilustrativa. Peça pelo WhatsApp as fotos da peça.') + '</p></div><div class="lj-info">' +
     (p.tag ? '<span class="m-tag">' + esc(p.tag) + '</span>' : '') + '<h1>' + esc(p.nome) + '</h1>' + (p.frase ? '<p class="lj-frase-g">' + esc(p.frase) + '</p>' : '') +
     '<p class="lj-preco-g"><span id="lj-preco">' + brl0(preco) + '</span><small id="lj-parc">' + (mx > 1 ? 'ou em até ' + mx + 'x de ' + brl2(preco / mx) + ' sem juros' : '') + '</small></p>' + paragrafos(p.texto) +
     (vars ? '<div><span class="muted" style="font-size:14px">' + esc(p.rotulo || 'Opção') + '</span><div class="lj-var" style="margin-top:8px">' + vars + '</div>' + (v && v.pedras ? '<p class="lj-pedras">Acompanha ' + esc(v.pedras) + '.</p>' : '') + '</div>' : '') +
-    '<div class="lj-acoes"><button class="btn btn-champ" type="button"' + (disp ? '' : ' disabled style="opacity:.45"') + '>' + (disp ? 'Comprar' : 'Esgotado') + '</button></div>' +
+    '<div class="lj-acoes">' + (disp ? '<button class="btn btn-champ" type="button">Adicionar ao carrinho</button><button class="btn btn-vazado" type="button">Comprar agora</button>' : '<button class="btn btn-champ" type="button" disabled style="opacity:.45">Esgotado</button>') + '</div>' +
     (disp ? '' : '<p class="lj-indisp">Esgotado no momento. <a href="' + wa('Olá! Quero um aviso quando chegar: ' + p.nome + '.') + '" target="_blank" rel="noopener">Avise-me quando chegar</a></p>') +
     '<p class="lj-humano">' + ICONE_HUMANO + '<span><b>Atendimento 100% humanizado.</b> Quem responde é uma pessoa da ARA. <a href="' + wa('Olá! Tenho uma dúvida sobre: ' + p.nome + '.') + '" target="_blank" rel="noopener">Fale com a gente</a></span></p>' +
     '<p class="muted" style="font-size:14px">' + esc((d.cfg.loja && d.cfg.loja.entrega) || '') + '</p>' +
@@ -279,7 +287,7 @@ const ORG = { '@id': DOMINIO + '/#org' };
 function disponibilidade(ok) { return ok ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'; }
 function ldProduto(d, p) {
   const url = DOMINIO + '/loja/' + p.slug, disp = disponivel(p), vs = p.variantes || [];
-  const imagens = [abs(foto(d, p, null))].concat(vs.map(v => abs(foto(d, p, v)))).filter((x, i, a) => a.indexOf(x) === i);
+  const imagens = fotos(d, p, null).map(abs).concat(vs.map(v => abs(foto(d, p, v)))).filter((x, i, a) => a.indexOf(x) === i);
   let oferta;
   if (vs.length && !mesmoPreco(p)) {
     const ps = vs.map(v => Number(v.preco));
@@ -383,7 +391,7 @@ async function sitemap() {
     url('/', '', casa ? img(casa, 'Arca ARA com cristais numa sala') : ''),
     url('/arca', '', Object.keys(ms).map(k => img(ms[k].foto, ms[k].nome)).join('')),
     url('/loja', ultimo(d.produtos)),
-  ].concat(d.produtos.map(p => url('/loja/' + p.slug, dia(p.atualizado_em), ilustrativa(foto(d, p, null)) ? '' : img(foto(d, p, null), p.nome))))
+  ].concat(d.produtos.map(p => url('/loja/' + p.slug, dia(p.atualizado_em), ilustrativa(foto(d, p, null)) ? '' : fotos(d, p, null).map(u => img(u, p.nome)).join(''))))
     .concat([url('/blog', ultimo(d.posts))])
     .concat(d.posts.map(p => url('/blog/' + p.slug, dia(p.atualizado_em) || p.data || '')))
     .concat([url('/historia', '')]);
@@ -400,6 +408,7 @@ async function feed() {
     '<g:id>' + xml(o.id) + '</g:id>' + (o.grupo ? '<g:item_group_id>' + xml(o.grupo) + '</g:item_group_id>' : '') +
     '<g:title>' + xml(o.titulo) + '</g:title><g:description>' + xml(o.descricao) + '</g:description>' +
     '<g:link>' + xml(o.link) + '</g:link><g:image_link>' + xml(abs(o.imagem)) + '</g:image_link>' +
+    (o.extras || []).map(u => '<g:additional_image_link>' + xml(abs(u)) + '</g:additional_image_link>').join('') +
     '<g:availability>' + (o.ok ? 'in_stock' : 'out_of_stock') + '</g:availability>' +
     '<g:price>' + Number(o.preco).toFixed(2) + ' BRL</g:price>' +
     '<g:brand>ARA</g:brand><g:condition>new</g:condition><g:identifier_exists>no</g:identifier_exists>' +
@@ -414,7 +423,7 @@ async function feed() {
   d.produtos.forEach(p => {
     const vs = p.variantes || [], desc = texto(p.texto || p.seo_descricao || p.frase);
     if (!vs.length) {
-      itens.push(item({ id: p.slug, titulo: p.nome + ' · ARA', descricao: desc, link: DOMINIO + '/loja/' + p.slug, imagem: foto(d, p, null), ok: disponivel(p), preco: p.preco, tipo: cristal(p) ? 'Loja > Cristais' : 'Loja > Objetos de ritual' }));
+      itens.push(item({ id: p.slug, titulo: p.nome + ' · ARA', descricao: desc, link: DOMINIO + '/loja/' + p.slug, imagem: foto(d, p, null), extras: fotos(d, p, null).slice(1), ok: disponivel(p), preco: p.preco, tipo: cristal(p) ? 'Loja > Cristais' : 'Loja > Objetos de ritual' }));
     } else {
       vs.forEach(v => {
         itens.push(item({ id: p.slug + '-' + v.id, grupo: p.slug, titulo: p.nome + ' · ' + v.nome + ' · ARA', descricao: desc + (v.pedras ? ' Acompanha ' + v.pedras + '.' : ''),
