@@ -102,7 +102,7 @@ async function rpc(nome, args, ms) {
 
 let _cache = null, _cacheEm = 0;
 async function dados() {
-  if (_cache && Date.now() - _cacheEm < 60000) return _cache;
+  if (_cache && Date.now() - _cacheEm < 5000) return _cache;
   const html = template();
   const def = blocoJSON(html, 'ara-def') || { produtos: [], posts: [], ilus: {} };
   let [prods, posts, cfg] = await Promise.all([

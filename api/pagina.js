@@ -31,6 +31,7 @@ module.exports = async (req, res) => {
   }
   res.statusCode = r.status;
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', r.status === 200 ? 'public, max-age=0, s-maxage=300, stale-while-revalidate=86400' : 'public, max-age=0, s-maxage=60');
+  /* cache curto: foto, preço ou estoque mudados no painel aparecem no ar em segundos */
+  res.setHeader('Cache-Control', r.status === 200 ? 'public, max-age=0, s-maxage=5, stale-while-revalidate=30' : 'public, max-age=0, s-maxage=5');
   res.end(r.html);
 };
