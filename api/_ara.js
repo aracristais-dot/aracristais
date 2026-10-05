@@ -19,10 +19,23 @@ const CATS_PADRAO = [
   { id: 'acessorio', nome: 'Acessórios e complementos', intro: '' },
   { id: 'incenso', nome: 'Incensos', intro: 'Incensos indianos para perfumar a casa e marcar o início da meditação. Cada aroma é um produto: escolha os seus e adicione ao carrinho.' },
 ];
+/* "comprar por pedra": o nome do produto, a ficha (Pedras/Composição) e as pedras das variações dizem a pedra */
+const PEDRAS = [
+  ['ametista', 'Ametista', ['ametista']], ['pirita', 'Pirita', ['pirita']], ['quartzo', 'Quartzo', ['quartzo', 'ponta de cristal', 'biterminado']],
+  ['selenita', 'Selenita', ['selenita']], ['turmalina', 'Turmalina negra', ['turmalina']], ['agata', 'Ágata', ['agata']],
+  ['citrino', 'Citrino', ['citrino']], ['fluorita', 'Fluorita', ['fluorita']], ['amazonita', 'Amazonita', ['amazonita']],
+  ['aragonita', 'Aragonita', ['aragonita']], ['geodo', 'Geodo', ['geodo']],
+];
+const norm = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+function textoPedra(p) {
+  return norm([p.nome].concat((p.detalhes || []).filter(x => /^(pedra|composi|cristal|mineral)/.test(norm(x.k))).map(x => x.v), (p.variantes || []).map(v => v.pedras || '')).join(' '));
+}
+function temPedra(p, id) { const pd = PEDRAS.filter(x => x[0] === id)[0]; return !!pd && pd[2].some(k => textoPedra(p).indexOf(k) >= 0); }
+function pedrasDaLoja(d) { return PEDRAS.filter(x => d.produtos.some(p => temPedra(p, x[0]))); }
 /* produtos que mudaram de nome: o endereço antigo leva ao novo */
 const ENDERECOS_ANTIGOS = { 'incenso-shankar-massala': 'incenso-shankar-nag-champa', 'ara-santuario': 'caixa-relicario', 'ara-porta-cristais': 'estojo-travessia', 'quartzo-rosa-bruto': 'cristal-de-quartzo', 'drusa-de-citrino': 'pulseira-de-citrino', 'geodo-branco': 'geodo-marroquino' };
 const COLS_BASICAS = 'id,slug,nome,tag,frase,texto,preco,rotulo,variantes,detalhes,uso,cuidados,foto_url,disponivel,sem_adicional,ativo,ordem,seo_titulo,seo_descricao,estoque,categoria';
-const COLS_PRODUTO = 'id,slug,nome,tag,frase,texto,preco,rotulo,variantes,detalhes,uso,cuidados,foto_url,fotos,disponivel,sem_adicional,ativo,ordem,seo_titulo,seo_descricao,estoque,atualizado_em,categoria';
+const COLS_PRODUTO = 'id,slug,nome,tag,frase,texto,preco,rotulo,variantes,detalhes,uso,cuidados,foto_url,fotos,disponivel,sem_adicional,ativo,ordem,seo_titulo,seo_descricao,estoque,atualizado_em,categoria,destaque';
 const ARCA_PADRAO = {
   essencial: { nome: 'Arca Essencial', preco: 1200, medidas: '30 x 16 x 8,5 cm', prazo: '4 dias',
     descricao: 'Mosaico de cristais naturais brasileiros montado à mão numa caixa compacta de madeira, com vidro nas laterais e tampa que abre. Criado a partir do seu nome completo e da sua data de nascimento: uma peça única.' },
@@ -166,12 +179,27 @@ function ilustrativa(u) { return /\/img\/loja\/ilus-/.test(String(u || '')); }
 function relacionados(d, p) { return d.produtos.filter(x => x.slug !== p.slug).map((x, i) => [x, i]).sort((a, b) => (disponivel(b[0]) - disponivel(a[0])) || (a[1] - b[1])).slice(0, 3).map(x => x[0]); }
 /* foto da prévia do link da loja: a primeira peça à venda com foto de verdade */
 function capaLoja(d) { const p = d.produtos.filter(x => disponivel(x) && !ilustrativa(foto(d, x, null)))[0] || d.produtos[0]; return p ? foto(d, p, null) : ''; }
-function gradeLoja(d) {
+function gradeLoja(d, lista) {
+  lista = lista || d.produtos;
   const card = p => cardProduto(d, p), grupos = d.cats.map(() => []).concat([[]]);
-  d.produtos.forEach(p => grupos[catOrdem(d.cats, p)].push(p));
-  if (grupos.filter(g => g.length).length < 2) return '<div class="lj-grade">' + d.produtos.map(card).join('') + '</div>';
+  lista.forEach(p => grupos[catOrdem(d.cats, p)].push(p));
+  if (lista !== d.produtos || grupos.filter(g => g.length).length < 2) return '<div class="lj-grade">' + lista.map(card).join('') + '</div>';
   return grupos.map((g, i) => { const c = d.cats[i] || { id: 'outros', nome: 'Mais da loja', intro: '' };
     return g.length ? '<h2 class="lj-sec" id="' + esc(c.id) + '">' + esc(c.nome) + '</h2>' + introCat(c.intro) + '<div class="lj-grade">' + g.map(card).join('') + '</div>' : ''; }).join('');
+}
+function chipsPedra(d, ativa) {
+  const ps = pedrasDaLoja(d);
+  if (ps.length < 2) return '';
+  return '<span class="lj-pedras-t">Comprar por pedra</span><div class="lj-chips">' + [['', 'Todas']].concat(ps).map(x => '<a class="lj-chip' + (x[0] === (ativa || '') ? ' on' : '') + '" href="/loja' + (x[0] ? '?pedra=' + x[0] : '') + '" data-pedra="' + x[0] + '">' + esc(x[1]) + '</a>').join('') + '</div>';
+}
+/* "Mais desejadas" da página inicial: as marcadas no painel; sem marcação, as primeiras disponíveis */
+function vitrine(d) {
+  const ativos = d.produtos, marcadas = ativos.filter(p => p.destaque);
+  const base = marcadas.length ? marcadas : ativos;
+  return base.filter(disponivel).concat(base.filter(p => !disponivel(p))).slice(0, marcadas.length ? 8 : 4);
+}
+function htmlVitrine(d) {
+  return vitrine(d).map(p => '<a class="lanc-item" href="/loja/' + esc(p.slug) + '"><div class="lf"><img src="' + esc(foto(d, p, null)) + '" alt="' + esc(p.nome) + '" loading="lazy"' + (fotoReal(d, p, null) ? ' style="mix-blend-mode:normal;object-fit:cover"' : '') + '></div><span>' + esc(p.nome) + (disponivel(p) ? '' : ' · esgotado') + '</span></a>').join('');
 }
 function foto(d, p, v) {
   if (v && v.img) return v.img;
@@ -398,12 +426,22 @@ async function renderizar(rota, params) {
       html = html.replace('<div id="lj-lista">', '<div id="lj-lista" hidden>').replace('<div id="lj-produto" hidden></div>', '<div id="lj-produto">' + htmlProduto(d, p, v) + '</div>');
     }
   } else if (base === 'loja') {
-    o = { titulo: seo.titulo, descricao: seo.descricao, url: DOMINIO + '/loja',
+    const pid = params && params.get && params.get('pedra'), pd = pedrasDaLoja(d).filter(x => x[0] === pid)[0];
+    const lista = pd ? d.produtos.filter(p => temPedra(p, pd[0])) : d.produtos;
+    if (pd) {
+      const menor = Math.min.apply(null, lista.map(precoBase));
+      o = { titulo: pd[1] + ' natural · Loja ARA', descricao: pd[1] + ' natural escolhida à mão na Loja ARA: ' + lista.length + (lista.length > 1 ? ' peças' : ' peça') + ', a partir de ' + brl0(menor) + '. Envio para todo o Brasil.',
+        url: DOMINIO + '/loja?pedra=' + pd[0], imagem: foto(d, lista[0], null), alt: pd[1] + ' · Loja ARA',
+        ld: [{ '@type': 'CollectionPage', '@id': DOMINIO + '/loja?pedra=' + pd[0] + '#pagina', name: pd[1] + ' natural · Loja ARA', url: DOMINIO + '/loja?pedra=' + pd[0], isPartOf: { '@id': DOMINIO + '/#site' },
+          mainEntity: { '@type': 'ItemList', itemListElement: lista.map((p, i) => ({ '@type': 'ListItem', position: i + 1, url: DOMINIO + '/loja/' + p.slug, name: p.nome })) } },
+          migalhas([['Início', '/'], ['Loja', '/loja'], [pd[1], '/loja?pedra=' + pd[0]]])] };
+    } else o = { titulo: seo.titulo, descricao: seo.descricao, url: DOMINIO + '/loja',
       imagem: capaLoja(d), imgW: 1000, imgH: 1000, alt: 'Loja ARA',
       ld: [{ '@type': 'CollectionPage', '@id': DOMINIO + '/loja#pagina', name: seo.titulo, url: DOMINIO + '/loja', isPartOf: { '@id': DOMINIO + '/#site' },
         mainEntity: { '@type': 'ItemList', itemListElement: d.produtos.map((p, i) => ({ '@type': 'ListItem', position: i + 1, url: DOMINIO + '/loja/' + p.slug, name: p.nome })) } },
         migalhas([['Início', '/'], ['Loja', '/loja']])] };
-    html = html.replace('<div id="lj-grade"></div>', '<div id="lj-grade">' + gradeLoja(d) + '</div>');
+    html = html.replace('<div id="lj-grade"></div>', '<div id="lj-grade">' + gradeLoja(d, pd ? lista : null) + '</div>')
+      .replace('<nav class="lj-pedras" id="lj-pedras" aria-label="Comprar por pedra"></nav>', '<nav class="lj-pedras" id="lj-pedras" aria-label="Comprar por pedra">' + chipsPedra(d, pd && pd[0]) + '</nav>');
   } else if (base === 'blog' && slug) {
     const p = d.posts.filter(x => x.slug === slug)[0];
     if (!p) { status = 404; o = { titulo: 'Artigo não encontrado | ARA', descricao: seo.descricao, url: DOMINIO + '/blog', robots: 'noindex,follow' }; }
@@ -427,7 +465,8 @@ async function renderizar(rota, params) {
     o = { titulo: seo.titulo, descricao: seo.descricao, url: DOMINIO + '/historia',
       ld: [{ '@type': 'AboutPage', '@id': DOMINIO + '/historia#pagina', name: seo.titulo, url: DOMINIO + '/historia', about: ORG }, migalhas([['Início', '/'], ['Nossa história', '/historia']])] };
   } else {
-    const s = d.cfg.seo || {};
+    const s = d.cfg.seo || {}, vt = htmlVitrine(d);
+    if (vt) html = html.replace(/(<div class="lanc-grade">)[\s\S]*?(<\/div>\s*<\/div>\s*<\/section>)/, (m, a, b) => a + vt + b);
     if (s.titulo) html = html.replace(/<title>[\s\S]*?<\/title>/, () => '<title>' + esc(s.titulo) + '</title>');
     if (s.descricao) html = html.replace(/<meta name="description" content="[^"]*">/, () => '<meta name="description" content="' + esc(s.descricao) + '">');
     return { status: 200, html: injetarDados(preencherArca(html, d), d) };
@@ -451,7 +490,7 @@ async function sitemap() {
     url('/', '', casa ? img(casa, 'Arca ARA com cristais numa sala') : ''),
     url('/arca', '', Object.keys(ms).map(k => img(ms[k].foto, ms[k].nome)).join('')),
     url('/loja', ultimo(d.produtos)),
-  ].concat(d.produtos.map(p => url('/loja/' + p.slug, dia(p.atualizado_em), ilustrativa(foto(d, p, null)) ? '' : fotos(d, p, null).map(u => img(u, p.nome)).join(''))))
+  ].concat(pedrasDaLoja(d).map(x => url('/loja?pedra=' + x[0], ultimo(d.produtos.filter(p => temPedra(p, x[0])))))).concat(d.produtos.map(p => url('/loja/' + p.slug, dia(p.atualizado_em), ilustrativa(foto(d, p, null)) ? '' : fotos(d, p, null).map(u => img(u, p.nome)).join(''))))
     .concat([url('/blog', ultimo(d.posts))])
     .concat(d.posts.map(p => url('/blog/' + p.slug, dia(p.atualizado_em) || p.data || '')))
     .concat([url('/historia', ''), url('/politica-de-devolucao', '')]);
