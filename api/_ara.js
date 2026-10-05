@@ -310,6 +310,11 @@ function cardProduto(d, p) {
     (p.tag ? '<span class="lj-tag">' + esc(p.tag) + '</span>' : '') + '<h3>' + esc(p.nome) + '</h3><span class="lj-preco">' + esc(textoPreco(p)) + '</span>' +
     (p.frase ? '<p class="lj-frase">' + esc(p.frase) + '</p>' : '') + '</a>' + botaoCard(p) + '</div>';
 }
+/* o que vai na caixa: saquinho de algodão cru nas peças pequenas e médias e o cartão ARA */
+function oQueVem(p) {
+  return '<details><summary>O que vem com a sua peça</summary><div class="c"><ul class="lj-vem"><li>' + (cristal(p) ? 'A pedra que você escolheu, natural e única' : 'A peça que você escolheu') + '</li>' +
+    '<li>Saquinho de algodão cru (peças pequenas e médias)</li><li>' + (cristal(p) ? 'Cartão ARA com o nome da sua pedra e os cuidados' : 'Cartão ARA') + '</li></ul></div></details>';
+}
 function htmlProduto(d, p, v) {
   const disp = disponivel(p), vs = p.variantes || [], mx = Number((d.cfg.loja && d.cfg.loja.parcelasMax) || 1);
   const preco = v ? Number(v.preco) : Number(p.preco);
@@ -333,7 +338,7 @@ function htmlProduto(d, p, v) {
     '<p class="muted" style="font-size:14px">' + esc((d.cfg.loja && d.cfg.loja.entrega) || '') + '</p>' +
     '<div><details open><summary>Detalhes</summary><div class="c"><ul class="lj-ficha">' + det + '</ul></div></details>' +
     (p.uso ? '<details><summary>Como usar</summary><div class="c">' + esc(p.uso) + '</div></details>' : '') +
-    (p.cuidados ? '<details><summary>Cuidados</summary><div class="c">' + esc(p.cuidados) + '</div></details>' : '') + '</div></div></article>' +
+    (p.cuidados ? '<details><summary>Cuidados</summary><div class="c">' + esc(p.cuidados) + '</div></details>' : '') + oQueVem(p) + '</div></div></article>' +
     (rel ? '<section class="lj-rel"><h2>Também na loja</h2><div class="lj-grade">' + rel + '</div></section>' : '');
 }
 function linkSecao(id) { return VIEWS.indexOf(id) >= 0 ? (id === 'inicio' ? '/' : '/' + id) : (SECOES[id] || '/#' + id); }
