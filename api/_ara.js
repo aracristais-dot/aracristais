@@ -203,6 +203,23 @@ function arcas(d) {
   });
   return out;
 }
+/* a Arca é o carro-chefe: textos com as palavras que as pessoas procuram (caixa de cristais personalizada, presente, nome e data de nascimento) */
+const ARCA_TITULO = ' · Caixa de cristais naturais personalizada com seu nome e data de nascimento';
+/* no Google a Arca aparece com cristais dentro: a foto enviada no painel, senão a da Arca na sala; a foto do modelo (caixa vazia) vai junto */
+function arcaFotosGoogle(m) { return [m.foto_url || fotoCasa() || m.foto, m.foto].filter((u, i, a) => u && a.indexOf(u) === i); }
+function arcaCaixa(k) { return k === 'atelie' ? 'Madeira maciça (feita à mão por marceneiro), vidro e cristais naturais brasileiros' : 'Madeira, vidro e cristais naturais brasileiros'; }
+function arcaTexto(d, m) {
+  return m.descricao + ' Presente personalizado e autoral: você envia o nome completo e a data de nascimento, a ARA faz a leitura do signo, da numerologia e da intenção (proteção, amor, prosperidade, equilíbrio, paz, recomeço) e escolhe as pedras uma a uma.' +
+    ' A peça chega com a descrição escrita de cada cristal e do porquê de estar ali. Medidas: ' + m.medidas + '. Pronta em ' + m.prazo + '. Em até ' + parcelasArca(d) + 'x sem juros.';
+}
+function arcaDestaques(d, k, m) {
+  return ['Peça única, criada a partir do seu nome completo e da sua data de nascimento',
+    'Mosaico de cristais naturais brasileiros montado à mão, pedra por pedra',
+    k === 'atelie' ? 'Caixa de madeira maciça feita à mão, sob encomenda, por um marceneiro artesão' : 'Caixa de madeira com vidro nas laterais e tampa que abre',
+    'Acompanha a descrição escrita de cada pedra e do porquê de estar ali',
+    'Pronta em ' + m.prazo + ', em até ' + parcelasArca(d) + 'x sem juros',
+    'Presente personalizado para aniversário, casa nova ou para você'];
+}
 function parcelasArca(d) { return Number((d.cfg.arcas && d.cfg.arcas.parcelasMax) || 10); }
 
 /* ---------- cabeçalho (título, descrição, prévia do link, dados estruturados) ---------- */
@@ -342,11 +359,13 @@ function ldArcas(d) {
   const ms = arcas(d);
   return Object.keys(ms).map(k => {
     const m = ms[k];
-    return { '@type': 'Product', '@id': DOMINIO + '/arca#' + k, name: m.nome + ' · caixa de cristais personalizada', description: m.descricao, image: [abs(m.foto)], sku: 'arca-' + k,
-      brand: { '@type': 'Brand', name: 'ARA' }, url: DOMINIO + '/arca', category: 'Caixa de cristais personalizada',
-      offers: { '@type': 'Offer', price: Number(m.preco).toFixed(2), priceCurrency: 'BRL', availability: disponibilidade(!m.esgotado), url: DOMINIO + '/arca', itemCondition: 'https://schema.org/NewCondition', seller: ORG } };
+    const url = DOMINIO + '/arca?modelo=' + k;
+    return { '@type': 'Product', '@id': DOMINIO + '/arca#' + k, name: m.nome + ARCA_TITULO, description: arcaTexto(d, m), image: arcaFotosGoogle(m).map(abs), sku: 'arca-' + k,
+      brand: { '@type': 'Brand', name: 'ARA' }, url, category: 'Caixa de cristais personalizada', material: arcaCaixa(k), size: m.medidas,
+      offers: { '@type': 'Offer', price: Number(m.preco).toFixed(2), priceCurrency: 'BRL', availability: disponibilidade(!m.esgotado), url, itemCondition: 'https://schema.org/NewCondition', seller: ORG } };
   });
 }
+function fotoCasa() { return (template().match(/\/img\/arca-cristais-na-sala\.[0-9a-f]{8}\.jpg/) || [])[0] || ''; }
 function ldPost(d, p) {
   const url = DOMINIO + '/blog/' + p.slug;
   return { '@type': 'BlogPosting', '@id': url + '#artigo', headline: p.titulo, description: p.seo_descricao || p.resumo || '', inLanguage: 'pt-BR',
@@ -400,13 +419,17 @@ async function renderizar(rota, params) {
         migalhas([['Início', '/'], ['Blog', '/blog']])] };
     html = html.replace('<div class="bl-grade" id="bl-grade"></div>', '<div class="bl-grade" id="bl-grade">' + d.posts.map(p => cardPost(d, p)).join('') + '</div>');
   } else if (base === 'arca') {
-    const ms = arcas(d);
-    o = { titulo: seo.titulo, descricao: seo.descricao, url: DOMINIO + '/arca', ogTipo: 'product', imagem: ms.atelie.foto, imgW: 1400, imgH: 1011, alt: 'Arca ARA, caixa de madeira e vidro com cristais',
-      preco: ms.essencial.preco, ld: ldArcas(d).concat([migalhas([['Início', '/'], ['A Arca', '/arca']])]) };
+    const ms = arcas(d), pedido = params && params.get && params.get('modelo'), mp = ms[pedido];
+    o = { titulo: mp ? mp.nome + ' · Caixa de cristais personalizada | ARA' : seo.titulo, descricao: seo.descricao, url: DOMINIO + '/arca', ogTipo: 'product',
+      imagem: (mp || ms.atelie).foto, imgW: mp && pedido !== 'atelie' ? 0 : 1400, imgH: 1011, alt: 'Arca ARA, caixa de madeira e vidro com cristais',
+      preco: (mp || ms.essencial).preco, ld: ldArcas(d).concat([migalhas([['Início', '/'], ['A Arca', '/arca']])]) };
   } else if (base === 'historia') {
     o = { titulo: seo.titulo, descricao: seo.descricao, url: DOMINIO + '/historia',
       ld: [{ '@type': 'AboutPage', '@id': DOMINIO + '/historia#pagina', name: seo.titulo, url: DOMINIO + '/historia', about: ORG }, migalhas([['Início', '/'], ['Nossa história', '/historia']])] };
   } else {
+    const s = d.cfg.seo || {};
+    if (s.titulo) html = html.replace(/<title>[\s\S]*?<\/title>/, () => '<title>' + esc(s.titulo) + '</title>');
+    if (s.descricao) html = html.replace(/<meta name="description" content="[^"]*">/, () => '<meta name="description" content="' + esc(s.descricao) + '">');
     return { status: 200, html: injetarDados(preencherArca(html, d), d) };
   }
   html = aplicarHead(html, o);
@@ -423,8 +446,7 @@ async function sitemap() {
   const img = (u, t) => '<image:image><image:loc>' + xml(abs(u)) + '</image:loc>' + (t ? '<image:title>' + xml(t) + '</image:title>' : '') + '</image:image>';
   const url = (loc, lastmod, imgs) => '<url><loc>' + xml(DOMINIO + loc) + '</loc>' + (lastmod ? '<lastmod>' + lastmod + '</lastmod>' : '') + (imgs || '') + '</url>';
   const ultimo = lista => lista.map(x => dia(x.atualizado_em) || x.data || '').filter(Boolean).sort().pop() || '';
-  const html = template();
-  const casa = (html.match(/\/img\/arca-cristais-na-sala\.[0-9a-f]{8}\.jpg/) || [])[0];
+  const casa = fotoCasa();
   const linhas = [
     url('/', '', casa ? img(casa, 'Arca ARA com cristais numa sala') : ''),
     url('/arca', '', Object.keys(ms).map(k => img(ms[k].foto, ms[k].nome)).join('')),
@@ -451,21 +473,33 @@ async function feed() {
     '<g:price>' + Number(o.preco).toFixed(2) + ' BRL</g:price>' +
     '<g:brand>ARA</g:brand><g:condition>new</g:condition><g:identifier_exists>no</g:identifier_exists>' +
     '<g:google_product_category>696</g:google_product_category><g:product_type>' + xml(o.tipo) + '</g:product_type>' +
+    (o.canonico ? '<g:canonical_link>' + xml(o.canonico) + '</g:canonical_link>' : '') +
+    (o.material ? '<g:material>' + xml(o.material) + '</g:material>' : '') +
+    (o.destaques || []).map(t => '<g:product_highlight>' + xml(t) + '</g:product_highlight>').join('') +
+    (o.detalhes || []).map(x => '<g:product_detail><g:section_name>' + xml(x[0]) + '</g:section_name><g:attribute_name>' + xml(x[1]) + '</g:attribute_name><g:attribute_value>' + xml(x[2]) + '</g:attribute_value></g:product_detail>').join('') +
+    /* rótulos para separar campanhas no Google Ads: linha (arca ou loja), categoria e faixa de preço */
+    o.rotulos.map((r, i) => r ? '<g:custom_label_' + i + '>' + xml(r) + '</g:custom_label_' + i + '>' : '').join('') +
     '</item>';
+  const faixa = v => (v = Number(v)) < 50 ? 'ate-50' : v < 150 ? '50-a-150' : v < 500 ? '150-a-500' : 'acima-de-500';
   const ms = arcas(d);
   Object.keys(ms).forEach(k => {
     const m = ms[k];
-    itens.push(item({ id: 'arca-' + k, titulo: m.nome + ' · Caixa de cristais personalizada ARA', descricao: m.descricao, link: DOMINIO + '/arca', imagem: m.foto,
-      ok: !m.esgotado, preco: m.preco, tipo: 'Arca > Caixa de cristais personalizada' }));
+    itens.push(item({ id: 'arca-' + k, titulo: m.nome + ' ARA' + ARCA_TITULO, descricao: arcaTexto(d, m), link: DOMINIO + '/arca?modelo=' + k, canonico: DOMINIO + '/arca',
+      imagem: arcaFotosGoogle(m)[0], extras: arcaFotosGoogle(m).slice(1), ok: !m.esgotado, preco: m.preco, tipo: 'Arca > Caixa de cristais personalizada > ' + m.nome,
+      material: arcaCaixa(k), destaques: arcaDestaques(d, k, m),
+      detalhes: [['Arca', 'Medidas', m.medidas], ['Arca', 'Pronta em', m.prazo], ['Arca', 'Personalização', 'Nome completo e data de nascimento']],
+      rotulos: ['arca', 'arca', faixa(m.preco)] }));
   });
   d.produtos.forEach(p => {
     const vs = p.variantes || [], desc = texto(p.texto || p.seo_descricao || p.frase);
     if (!vs.length) {
-      itens.push(item({ id: p.slug, titulo: p.nome + ' · ARA', descricao: desc, link: DOMINIO + '/loja/' + p.slug, imagem: foto(d, p, null), extras: fotos(d, p, null).slice(1), ok: disponivel(p), preco: p.preco, tipo: 'Loja > ' + catNome(d.cats, p) }));
+      itens.push(item({ id: p.slug, titulo: p.nome + ' · ARA', descricao: desc, link: DOMINIO + '/loja/' + p.slug, imagem: foto(d, p, null), extras: fotos(d, p, null).slice(1), ok: disponivel(p), preco: p.preco, tipo: 'Loja > ' + catNome(d.cats, p),
+        rotulos: ['loja', p.categoria || 'cristal', faixa(p.preco)] }));
     } else {
       vs.forEach(v => {
         itens.push(item({ id: p.slug + '-' + v.id, grupo: p.slug, titulo: p.nome + ' · ' + v.nome + ' · ARA', descricao: desc + (v.pedras ? ' Acompanha ' + v.pedras + '.' : ''),
-          link: DOMINIO + '/loja/' + p.slug + '?opcao=' + encodeURIComponent(v.id), imagem: foto(d, p, v), ok: disponivel(p) && varOk(p, v), preco: v.preco, tipo: 'Loja > ' + catNome(d.cats, p) }));
+          link: DOMINIO + '/loja/' + p.slug + '?opcao=' + encodeURIComponent(v.id), imagem: foto(d, p, v), ok: disponivel(p) && varOk(p, v), preco: v.preco, tipo: 'Loja > ' + catNome(d.cats, p),
+          rotulos: ['loja', p.categoria || 'cristal', faixa(v.preco)] }));
       });
     }
   });
