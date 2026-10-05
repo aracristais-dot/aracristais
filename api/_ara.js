@@ -432,7 +432,7 @@ async function sitemap() {
   ].concat(d.produtos.map(p => url('/loja/' + p.slug, dia(p.atualizado_em), ilustrativa(foto(d, p, null)) ? '' : fotos(d, p, null).map(u => img(u, p.nome)).join(''))))
     .concat([url('/blog', ultimo(d.posts))])
     .concat(d.posts.map(p => url('/blog/' + p.slug, dia(p.atualizado_em) || p.data || '')))
-    .concat([url('/historia', '')]);
+    .concat([url('/historia', ''), url('/politica-de-devolucao', '')]);
   return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n' + linhas.join('\n') + '\n</urlset>\n';
 }
 
