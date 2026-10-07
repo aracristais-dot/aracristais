@@ -15,6 +15,7 @@ const VIEWS = ['inicio', 'historia', 'arca', 'loja', 'blog'];
 const SECOES = { colecao: '/arca#colecao', pedido: '/arca#pedido', obra: '/#obra', intencoes: '/#intencoes', cristais: '/historia#cristais', 'linha-do-tempo': '/historia#linha-do-tempo' };
 /* categorias da loja: vêm da retaguarda (ara_config 'categorias'), na ordem em que aparecem; esta é a reserva */
 const CATS_PADRAO = [
+  { id: 'aura', nome: 'Auras ARA', intro: 'Composições exclusivas, montadas à mão sobre a bandeja dourada. Cada Aura reúne pedras escolhidas para uma intenção e existe uma única vez.' },
   { id: 'cristal', nome: 'Cristais', intro: 'Os cristais se formam ao longo de milhões de anos e acompanham a humanidade desde os sumérios. [Conheça essa história](/historia#linha-do-tempo), que também dá nome às peças da ARA.' },
   { id: 'acessorio', nome: 'Acessórios e complementos', intro: '' },
   { id: 'incenso', nome: 'Incensos', intro: 'Incensos indianos para perfumar a casa e marcar o início da meditação. Cada aroma é um produto: escolha os seus e adicione ao carrinho.' },
