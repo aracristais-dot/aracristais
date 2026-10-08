@@ -40,11 +40,11 @@ const COLS_BASICAS = 'id,slug,nome,tag,frase,texto,preco,rotulo,variantes,detalh
 const COLS_PRODUTO = 'id,slug,nome,tag,frase,texto,preco,rotulo,variantes,detalhes,uso,cuidados,foto_url,fotos,disponivel,sem_adicional,ativo,ordem,seo_titulo,seo_descricao,estoque,atualizado_em,categoria,destaque';
 const ARCA_PADRAO = {
   essencial: { nome: 'Arca Essencial', preco: 1200, medidas: '30 x 16 x 8,5 cm', prazo: '4 dias',
-    descricao: 'Mosaico de cristais naturais brasileiros montado à mão numa caixa compacta de madeira, com vidro nas laterais e tampa que abre. Criado a partir do seu nome completo e da sua data de nascimento: uma peça única.' },
+    descricao: 'Mosaico de cristais naturais montado à mão numa caixa compacta de madeira, com vidro nas laterais e tampa que abre. Criado a partir do seu nome completo e da sua data de nascimento: uma peça única.' },
   plena: { nome: 'Arca Plena', preco: 1700, medidas: '36 x 21 x 12 cm', prazo: '4 dias',
-    descricao: 'Mosaico de cristais naturais brasileiros montado à mão numa caixa maior de madeira e vidro, com mais pedras e mais camadas. Criado a partir do seu nome completo e da sua data de nascimento: uma peça única.' },
+    descricao: 'Mosaico de cristais naturais montado à mão numa caixa maior de madeira e vidro, com mais pedras e mais camadas. Criado a partir do seu nome completo e da sua data de nascimento: uma peça única.' },
   atelie: { nome: 'Arca Ateliê', preco: 4200, medidas: '30 x 22 x 10 cm', prazo: '40 dias',
-    descricao: 'Mosaico de cristais naturais brasileiros numa caixa feita à mão, sob encomenda, por um marceneiro artesão, em madeira maciça e vidro. Criado a partir do seu nome completo e da sua data de nascimento: exclusiva do início ao fim.' },
+    descricao: 'Mosaico de cristais naturais numa caixa feita à mão, sob encomenda, por um marceneiro artesão, em madeira maciça e vidro. Criado a partir do seu nome completo e da sua data de nascimento: exclusiva do início ao fim.' },
 };
 const WHATS_PADRAO = '5511973371416';
 const ICONE_HUMANO = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 5.5h16v10H9.5L5 19.5v-4H4z"/><path d="M12 13.2s-3-1.8-3-3.6a1.6 1.6 0 0 1 3-.8 1.6 1.6 0 0 1 3 .8c0 1.8-3 3.6-3 3.6z" fill="currentColor" stroke="none"/></svg>';
@@ -244,14 +244,14 @@ function arcas(d) {
 const ARCA_TITULO = ' · Caixa decorativa de cristais naturais, personalizada com seu nome e data de nascimento';
 /* no Google a Arca aparece com cristais dentro: a foto enviada no painel, senão a da Arca na sala; a foto do modelo (caixa vazia) vai junto */
 function arcaFotosGoogle(m) { return [m.foto_url || fotoCasa() || m.foto, m.foto].filter((u, i, a) => u && a.indexOf(u) === i); }
-function arcaCaixa(k) { return k === 'atelie' ? 'Madeira maciça (feita à mão por marceneiro), vidro e cristais naturais brasileiros' : 'Madeira, vidro e cristais naturais brasileiros'; }
+function arcaCaixa(k) { return k === 'atelie' ? 'Madeira maciça (feita à mão por marceneiro), vidro e cristais naturais' : 'Madeira, vidro e cristais naturais'; }
 function arcaTexto(d, m) {
   return m.descricao + ' Presente personalizado e autoral: você envia o nome completo e a data de nascimento, a ARA faz a leitura do signo, da numerologia e da intenção (proteção, amor, prosperidade, equilíbrio, paz, recomeço) e escolhe as pedras uma a uma.' +
     ' A peça chega com a descrição escrita de cada cristal e do porquê de estar ali. Medidas: ' + m.medidas + '. Pronta em ' + m.prazo + '. Em até ' + parcelasArca(d) + 'x sem juros.';
 }
 function arcaDestaques(d, k, m) {
   return ['Peça única, criada a partir do seu nome completo e da sua data de nascimento',
-    'Mosaico de cristais naturais brasileiros montado à mão, pedra por pedra',
+    'Mosaico de cristais naturais montado à mão, pedra por pedra',
     k === 'atelie' ? 'Caixa de madeira maciça feita à mão, sob encomenda, por um marceneiro artesão' : 'Caixa de madeira com vidro nas laterais e tampa que abre',
     'Acompanha a descrição escrita de cada pedra e do porquê de estar ali',
     'Pronta em ' + m.prazo + ', em até ' + parcelasArca(d) + 'x sem juros',
