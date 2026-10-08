@@ -6,6 +6,10 @@
       "destination": "/politica-de-devolucao.html"
     },
     {
+      "source": "/como-comprar",
+      "destination": "/como-comprar.html"
+    },
+    {
       "source": "/sitemap.xml",
       "destination": "/api/sitemap"
     },
