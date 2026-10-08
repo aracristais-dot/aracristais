@@ -16,7 +16,8 @@ const SECOES = { colecao: '/arca#colecao', pedido: '/arca#pedido', obra: '/#obra
 /* categorias da loja: vêm da retaguarda (ara_config 'categorias'), na ordem em que aparecem; esta é a reserva */
 const CATS_PADRAO = [
   { id: 'aura', nome: 'Auras ARA', intro: 'Composições exclusivas, montadas à mão sobre a bandeja dourada. Cada Aura reúne pedras escolhidas para uma intenção e existe uma única vez.' },
-  { id: 'cristal', nome: 'Cristais', intro: 'Os cristais se formam ao longo de milhões de anos e acompanham a humanidade desde os sumérios. [Conheça essa história](/historia#linha-do-tempo), que também dá nome às peças da ARA.' },
+  { id: 'cristal', nome: 'Esculturas e cristais', intro: 'Esculturas minerais e cristais naturais escolhidos à mão, um a um: peças únicas para a estante, o aparador ou a mesa de trabalho. [Conheça a história dos cristais](/historia#linha-do-tempo).' },
+  { id: 'caixa', nome: 'Caixas', intro: 'Caixas de madeira e vidro para guardar e expor cristais, joias e lembranças. Para uma caixa já montada com os seus cristais, a partir do seu nome e da sua data de nascimento, [conheça a Arca](/arca#colecao).' },
   { id: 'acessorio', nome: 'Decoração e acessórios', intro: 'Objetos de decoração escolhidos pela ARA para a sala, o quarto, o escritório e o altar: peças de vidro, mármore, madeira e pedra que trazem luz e textura para o ambiente.' },
   { id: 'incenso', nome: 'Incensos', intro: 'Incensos indianos para perfumar a casa e marcar o início da meditação. Cada aroma é um produto: escolha os seus e adicione ao carrinho.' },
 ];
@@ -508,7 +509,7 @@ async function sitemap() {
   ].concat(pedrasDaLoja(d).map(x => url('/loja?pedra=' + x[0], ultimo(d.produtos.filter(p => temPedra(p, x[0])))))).concat(d.produtos.map(p => url('/loja/' + p.slug, dia(p.atualizado_em), ilustrativa(foto(d, p, null)) ? '' : fotos(d, p, null).map(u => img(u, p.nome)).join(''))))
     .concat([url('/blog', ultimo(d.posts))])
     .concat(d.posts.map(p => url('/blog/' + p.slug, dia(p.atualizado_em) || p.data || '')))
-    .concat([url('/historia', ''), url('/politica-de-devolucao', '')]);
+    .concat([url('/historia', ''), url('/politica-de-devolucao', ''), url('/como-comprar', '')]);
   return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n' + linhas.join('\n') + '\n</urlset>\n';
 }
 
