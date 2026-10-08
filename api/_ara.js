@@ -138,6 +138,7 @@ async function dados() {
     ilus: def.ilus || {},
     imgs: blocoJSON(html, 'ara-imgs') || {},
     seo: blocoJSON(html, 'ara-seo') || {},
+    pedrasInfo: blocoJSON(html, 'ara-pedras-info') || {},
     okProd, okPost,
   };
   d.cfg = {};
@@ -187,6 +188,12 @@ function gradeLoja(d, lista) {
   if (lista !== d.produtos || grupos.filter(g => g.length).length < 2) return '<div class="lj-grade">' + lista.map(card).join('') + '</div>';
   return grupos.map((g, i) => { const c = d.cats[i] || { id: 'outros', nome: 'Mais da loja', intro: '' };
     return g.length ? '<h2 class="lj-sec" id="' + esc(c.id) + '">' + esc(c.nome) + '</h2>' + introCat(c.intro) + '<div class="lj-grade">' + g.map(card).join('') + '</div>' : ''; }).join('');
+}
+/* texto de cada pedra na página "comprar por pedra": significado, decoração e cuidados */
+function pedraInfo(d, pd) {
+  const i = pd && d.pedrasInfo[pd[0]];
+  if (!i) return '';
+  return '<h2>' + esc(pd[1]) + ': significado e decoração</h2><p>' + esc(i.s) + '</p><h3>Na decoração</h3><p>' + esc(i.d) + '</p><h3>Cuidados</h3><p>' + esc(i.c) + '</p>';
 }
 function chipsPedra(d, ativa) {
   const ps = pedrasDaLoja(d);
@@ -436,7 +443,8 @@ async function renderizar(rota, params) {
     const lista = pd ? d.produtos.filter(p => temPedra(p, pd[0])) : d.produtos;
     if (pd) {
       const menor = Math.min.apply(null, lista.map(precoBase));
-      o = { titulo: pd[1] + ' natural · Loja ARA', descricao: pd[1] + ' natural escolhida à mão na Loja ARA: ' + lista.length + (lista.length > 1 ? ' peças' : ' peça') + ', a partir de ' + brl0(menor) + '. Envio para todo o Brasil.',
+      const inf = d.pedrasInfo[pd[0]];
+      o = { titulo: pd[1] + (inf ? ': significado e peças naturais · ARA' : ' natural · Loja ARA'), descricao: inf ? inf.r : pd[1] + ' natural escolhida à mão na Loja ARA: ' + lista.length + (lista.length > 1 ? ' peças' : ' peça') + ', a partir de ' + brl0(menor) + '. Envio para todo o Brasil.',
         url: DOMINIO + '/loja?pedra=' + pd[0], imagem: foto(d, lista[0], null), alt: pd[1] + ' · Loja ARA',
         ld: [{ '@type': 'CollectionPage', '@id': DOMINIO + '/loja?pedra=' + pd[0] + '#pagina', name: pd[1] + ' natural · Loja ARA', url: DOMINIO + '/loja?pedra=' + pd[0], isPartOf: { '@id': DOMINIO + '/#site' },
           mainEntity: { '@type': 'ItemList', itemListElement: lista.map((p, i) => ({ '@type': 'ListItem', position: i + 1, url: DOMINIO + '/loja/' + p.slug, name: p.nome })) } },
@@ -447,7 +455,8 @@ async function renderizar(rota, params) {
         mainEntity: { '@type': 'ItemList', itemListElement: d.produtos.map((p, i) => ({ '@type': 'ListItem', position: i + 1, url: DOMINIO + '/loja/' + p.slug, name: p.nome })) } },
         migalhas([['Início', '/'], ['Loja', '/loja']])] };
     html = html.replace('<div id="lj-grade"></div>', '<div id="lj-grade">' + gradeLoja(d, pd ? lista : null) + '</div>')
-      .replace('<nav class="lj-pedras" id="lj-pedras" aria-label="Comprar por pedra"></nav>', '<nav class="lj-pedras" id="lj-pedras" aria-label="Comprar por pedra">' + chipsPedra(d, pd && pd[0]) + '</nav>');
+      .replace('<nav class="lj-pedras" id="lj-pedras" aria-label="Comprar por pedra"></nav>', '<nav class="lj-pedras" id="lj-pedras" aria-label="Comprar por pedra">' + chipsPedra(d, pd && pd[0]) + '</nav>')
+      .replace('<section class="lj-pedra-info" id="lj-pedra-info" hidden></section>', pd && d.pedrasInfo[pd[0]] ? '<section class="lj-pedra-info" id="lj-pedra-info">' + pedraInfo(d, pd) + '</section>' : '<section class="lj-pedra-info" id="lj-pedra-info" hidden></section>');
   } else if (base === 'blog' && slug) {
     const p = d.posts.filter(x => x.slug === slug)[0];
     if (!p) { status = 404; o = { titulo: 'Artigo não encontrado | ARA', descricao: seo.descricao, url: DOMINIO + '/blog', robots: 'noindex,follow' }; }
