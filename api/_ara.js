@@ -227,7 +227,7 @@ function arcas(d) {
     const x = cfg[k] || {};
     ['nome', 'preco', 'medidas', 'prazo', 'foto_url'].forEach(f => { if (x[f] != null && x[f] !== '') m[f] = x[f]; });
     m.esgotado = x.disponivel === false || (typeof x.estoque === 'number' && x.estoque <= 0);
-    m.foto = m.foto_url || (html.match(new RegExp('/img/arca-' + k + '\\.[0-9a-f]{8}\\.jpg')) || [])[0] || '/og-image.jpg';
+    m.foto = m.foto_url || (html.match(new RegExp('/img/arca-' + k + '(?:-colecao)?\\.[0-9a-f]{8}\\.jpg')) || [])[0] || '/og-image.jpg';
     out[k] = m;
   });
   return out;
