@@ -17,7 +17,7 @@ const SECOES = { colecao: '/arca#colecao', pedido: '/arca#pedido', obra: '/#obra
 const CATS_PADRAO = [
   { id: 'aura', nome: 'Auras ARA', intro: 'Composições exclusivas, montadas à mão sobre a bandeja dourada. Cada Aura reúne pedras escolhidas para uma intenção e existe uma única vez.' },
   { id: 'cristal', nome: 'Cristais', intro: 'Os cristais se formam ao longo de milhões de anos e acompanham a humanidade desde os sumérios. [Conheça essa história](/historia#linha-do-tempo), que também dá nome às peças da ARA.' },
-  { id: 'acessorio', nome: 'Acessórios e complementos', intro: '' },
+  { id: 'acessorio', nome: 'Decoração e acessórios', intro: 'Objetos de decoração escolhidos pela ARA para a sala, o quarto, o escritório e o altar: peças de vidro, mármore, madeira e pedra que trazem luz e textura para o ambiente.' },
   { id: 'incenso', nome: 'Incensos', intro: 'Incensos indianos para perfumar a casa e marcar o início da meditação. Cada aroma é um produto: escolha os seus e adicione ao carrinho.' },
 ];
 /* "comprar por pedra": o nome do produto, a ficha (Pedras/Composição) e as pedras das variações dizem a pedra */
@@ -227,13 +227,13 @@ function arcas(d) {
     const x = cfg[k] || {};
     ['nome', 'preco', 'medidas', 'prazo', 'foto_url'].forEach(f => { if (x[f] != null && x[f] !== '') m[f] = x[f]; });
     m.esgotado = x.disponivel === false || (typeof x.estoque === 'number' && x.estoque <= 0);
-    m.foto = m.foto_url || (html.match(new RegExp('/img/arca-' + k + '\\.[0-9a-f]{8}\\.jpg')) || [])[0] || '/og-image.jpg';
+    m.foto = m.foto_url || (html.match(new RegExp('/img/arca-' + k + '(?:-colecao)?\\.[0-9a-f]{8}\\.jpg')) || [])[0] || '/og-image.jpg';
     out[k] = m;
   });
   return out;
 }
 /* a Arca é o carro-chefe: textos com as palavras que as pessoas procuram (caixa de cristais personalizada, presente, nome e data de nascimento) */
-const ARCA_TITULO = ' · Caixa de cristais naturais personalizada com seu nome e data de nascimento';
+const ARCA_TITULO = ' · Caixa decorativa de cristais naturais, personalizada com seu nome e data de nascimento';
 /* no Google a Arca aparece com cristais dentro: a foto enviada no painel, senão a da Arca na sala; a foto do modelo (caixa vazia) vai junto */
 function arcaFotosGoogle(m) { return [m.foto_url || fotoCasa() || m.foto, m.foto].filter((u, i, a) => u && a.indexOf(u) === i); }
 function arcaCaixa(k) { return k === 'atelie' ? 'Madeira maciça (feita à mão por marceneiro), vidro e cristais naturais brasileiros' : 'Madeira, vidro e cristais naturais brasileiros'; }
@@ -530,7 +530,7 @@ async function feed() {
   Object.keys(ms).forEach(k => {
     const m = ms[k];
     itens.push(item({ id: 'arca-' + k, titulo: m.nome + ' ARA' + ARCA_TITULO, descricao: arcaTexto(d, m), link: DOMINIO + '/arca?modelo=' + k, canonico: DOMINIO + '/arca',
-      imagem: arcaFotosGoogle(m)[0], extras: arcaFotosGoogle(m).slice(1), ok: !m.esgotado, preco: m.preco, tipo: 'Arca > Caixa de cristais personalizada > ' + m.nome,
+      imagem: arcaFotosGoogle(m)[0], extras: arcaFotosGoogle(m).slice(1), ok: !m.esgotado, preco: m.preco, tipo: 'Decoração > Arca > Caixa de cristais personalizada > ' + m.nome,
       material: arcaCaixa(k), destaques: arcaDestaques(d, k, m),
       detalhes: [['Arca', 'Medidas', m.medidas], ['Arca', 'Pronta em', m.prazo], ['Arca', 'Personalização', 'Nome completo e data de nascimento']],
       rotulos: ['arca', 'arca', faixa(m.preco)] }));
