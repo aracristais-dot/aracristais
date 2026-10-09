@@ -40,11 +40,11 @@ const COLS_BASICAS = 'id,slug,nome,tag,frase,texto,preco,rotulo,variantes,detalh
 const COLS_PRODUTO = 'id,slug,nome,tag,frase,texto,preco,rotulo,variantes,detalhes,uso,cuidados,foto_url,fotos,disponivel,sem_adicional,ativo,ordem,seo_titulo,seo_descricao,estoque,atualizado_em,categoria,destaque';
 const ARCA_PADRAO = {
   essencial: { nome: 'Arca Essencial', preco: 1200, medidas: '30 x 16 x 8,5 cm', prazo: '4 dias',
-    descricao: 'Mosaico de cristais naturais montado à mão em uma Arca compacta de madeira, com vidro nas laterais e tampa que abre. Criado a partir do seu nome completo e da sua data de nascimento: uma peça única.' },
+    descricao: 'Uma obra exclusiva, criada à mão a partir do seu nome e da sua data de nascimento. Os cristais escolhidos um a um para você se reúnem em um só lugar, entre madeira orgânica e vidro: o seu altar particular, em formato compacto para a estante, a cabeceira ou a mesa de trabalho. Cristais não se repetem, e nenhuma Arca também.' },
   plena: { nome: 'Arca Plena', preco: 1700, medidas: '36 x 21 x 12 cm', prazo: '4 dias',
-    descricao: 'Mosaico de cristais naturais montado à mão em uma Arca maior de madeira e vidro, com mais pedras e mais camadas. Criado a partir do seu nome completo e da sua data de nascimento: uma peça única.' },
+    descricao: 'Uma obra exclusiva, criada à mão a partir do seu nome e da sua data de nascimento, com mais cristais e mais camadas. Cada cristal é escolhido um a um e reunido entre madeira orgânica e vidro, com acabamento especial: o seu altar particular, com presença para a sala ou o escritório. Cristais não se repetem, e nenhuma Arca também.' },
   atelie: { nome: 'Arca Ateliê', preco: 4200, medidas: '30 x 22 x 10 cm', prazo: '40 dias',
-    descricao: 'Mosaico de cristais naturais numa Arca feita à mão, sob encomenda, por um marceneiro artesão, em madeira maciça e vidro. Criado a partir do seu nome completo e da sua data de nascimento: exclusiva do início ao fim.' },
+    descricao: 'A expressão máxima da Arca: a estrutura em madeira maciça é feita à mão, sob encomenda, por um marceneiro artesão, e recebe os cristais escolhidos um a um a partir do seu nome e da sua data de nascimento. O seu altar particular, exclusivo do início ao fim.' },
 };
 const WHATS_PADRAO = '5511973371416';
 const ICONE_HUMANO = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 5.5h16v10H9.5L5 19.5v-4H4z"/><path d="M12 13.2s-3-1.8-3-3.6a1.6 1.6 0 0 1 3-.8 1.6 1.6 0 0 1 3 .8c0 1.8-3 3.6-3 3.6z" fill="currentColor" stroke="none"/></svg>';
