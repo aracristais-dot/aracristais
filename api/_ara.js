@@ -17,7 +17,7 @@ const SECOES = { colecao: '/arca#colecao', pedido: '/arca#pedido', obra: '/#obra
 const CATS_PADRAO = [
   { id: 'aura', nome: 'Auras ARA', intro: 'Composições exclusivas, montadas à mão sobre a bandeja dourada. Cada Aura reúne pedras escolhidas para uma intenção e existe uma única vez.' },
   { id: 'cristal', nome: 'Esculturas e cristais', intro: 'Esculturas minerais e cristais naturais escolhidos à mão, um a um: peças únicas para a estante, o aparador ou a mesa de trabalho. [Conheça a história dos cristais](/historia#linha-do-tempo).' },
-  { id: 'caixa', nome: 'Caixas', intro: 'Caixas de madeira e vidro para guardar e expor cristais, joias e lembranças. Para uma caixa já montada com os seus cristais, a partir do seu nome e da sua data de nascimento, [conheça a Arca](/arca#colecao).' },
+  { id: 'caixa', nome: 'Caixas', intro: 'Caixas de madeira e vidro para guardar e expor cristais, joias e lembranças. Para os seus cristais já montados em uma obra única, a partir do seu nome e da sua data de nascimento, [conheça a Arca](/arca#colecao).' },
   { id: 'acessorio', nome: 'Decoração e acessórios', intro: 'Objetos de decoração escolhidos pela ARA para a sala, o quarto, o escritório e o altar: peças de vidro, mármore, madeira e pedra que trazem luz e textura para o ambiente.' },
   { id: 'incenso', nome: 'Incensos', intro: 'Incensos indianos para perfumar a casa e marcar o início da meditação. Cada aroma é um produto: escolha os seus e adicione ao carrinho.' },
 ];
@@ -40,11 +40,11 @@ const COLS_BASICAS = 'id,slug,nome,tag,frase,texto,preco,rotulo,variantes,detalh
 const COLS_PRODUTO = 'id,slug,nome,tag,frase,texto,preco,rotulo,variantes,detalhes,uso,cuidados,foto_url,fotos,disponivel,sem_adicional,ativo,ordem,seo_titulo,seo_descricao,estoque,atualizado_em,categoria,destaque';
 const ARCA_PADRAO = {
   essencial: { nome: 'Arca Essencial', preco: 1200, medidas: '30 x 16 x 8,5 cm', prazo: '4 dias',
-    descricao: 'Mosaico de cristais naturais montado à mão numa caixa compacta de madeira, com vidro nas laterais e tampa que abre. Criado a partir do seu nome completo e da sua data de nascimento: uma peça única.' },
+    descricao: 'Uma obra exclusiva, criada à mão a partir do seu nome e da sua data de nascimento. Os cristais escolhidos um a um para você se reúnem em um só lugar, entre madeira orgânica e vidro: o seu altar particular, em formato compacto para a estante, a cabeceira ou a mesa de trabalho. Cristais não se repetem, e nenhuma Arca também.' },
   plena: { nome: 'Arca Plena', preco: 1700, medidas: '36 x 21 x 12 cm', prazo: '4 dias',
-    descricao: 'Mosaico de cristais naturais montado à mão numa caixa maior de madeira e vidro, com mais pedras e mais camadas. Criado a partir do seu nome completo e da sua data de nascimento: uma peça única.' },
+    descricao: 'Uma obra exclusiva, criada à mão a partir do seu nome e da sua data de nascimento, com mais cristais e mais camadas. Cada cristal é escolhido um a um e reunido entre madeira orgânica e vidro, com acabamento especial: o seu altar particular, com presença para a sala ou o escritório. Cristais não se repetem, e nenhuma Arca também.' },
   atelie: { nome: 'Arca Ateliê', preco: 4200, medidas: '30 x 22 x 10 cm', prazo: '40 dias',
-    descricao: 'Mosaico de cristais naturais numa caixa feita à mão, sob encomenda, por um marceneiro artesão, em madeira maciça e vidro. Criado a partir do seu nome completo e da sua data de nascimento: exclusiva do início ao fim.' },
+    descricao: 'A expressão máxima da Arca: a estrutura em madeira maciça é feita à mão, sob encomenda, por um marceneiro artesão, e recebe os cristais escolhidos um a um a partir do seu nome e da sua data de nascimento. O seu altar particular, exclusivo do início ao fim.' },
 };
 const WHATS_PADRAO = '5511973371416';
 const ICONE_HUMANO = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 5.5h16v10H9.5L5 19.5v-4H4z"/><path d="M12 13.2s-3-1.8-3-3.6a1.6 1.6 0 0 1 3-.8 1.6 1.6 0 0 1 3 .8c0 1.8-3 3.6-3 3.6z" fill="currentColor" stroke="none"/></svg>';
@@ -241,7 +241,7 @@ function arcas(d) {
   return out;
 }
 /* a Arca é o carro-chefe: textos com as palavras que as pessoas procuram (caixa de cristais personalizada, presente, nome e data de nascimento) */
-const ARCA_TITULO = ' · Caixa decorativa de cristais naturais, personalizada com seu nome e data de nascimento';
+const ARCA_TITULO = ' · Obra de cristais naturais, personalizada com seu nome e data de nascimento';
 /* no Google a Arca aparece com cristais dentro: a foto enviada no painel, senão a da Arca na sala; a foto do modelo (caixa vazia) vai junto */
 function arcaFotosGoogle(m) { return [m.foto_url || fotoCasa() || m.foto, m.foto].filter((u, i, a) => u && a.indexOf(u) === i); }
 function arcaCaixa(k) { return k === 'atelie' ? 'Madeira maciça (feita à mão por marceneiro), vidro e cristais naturais' : 'Madeira, vidro e cristais naturais'; }
@@ -252,7 +252,7 @@ function arcaTexto(d, m) {
 function arcaDestaques(d, k, m) {
   return ['Peça única, criada a partir do seu nome completo e da sua data de nascimento',
     'Mosaico de cristais naturais montado à mão, pedra por pedra',
-    k === 'atelie' ? 'Caixa de madeira maciça feita à mão, sob encomenda, por um marceneiro artesão' : 'Caixa de madeira com vidro nas laterais e tampa que abre',
+    k === 'atelie' ? 'Madeira maciça trabalhada à mão, sob encomenda, por um marceneiro artesão' : 'Madeira com vidro nas laterais e tampa que abre',
     'Acompanha a descrição escrita de cada pedra e do porquê de estar ali',
     'Pronta em ' + m.prazo + ', em até ' + parcelasArca(d) + 'x sem juros',
     'Presente personalizado para aniversário, casa nova ou para você'];
@@ -403,7 +403,7 @@ function ldArcas(d) {
     const m = ms[k];
     const url = DOMINIO + '/arca?modelo=' + k;
     return { '@type': 'Product', '@id': DOMINIO + '/arca#' + k, name: m.nome + ARCA_TITULO, description: arcaTexto(d, m), image: arcaFotosGoogle(m).map(abs), sku: 'arca-' + k,
-      brand: { '@type': 'Brand', name: 'ARA' }, url, category: 'Caixa de cristais personalizada', material: arcaCaixa(k), size: m.medidas,
+      brand: { '@type': 'Brand', name: 'ARA' }, url, category: 'Arca de cristais personalizada', material: arcaCaixa(k), size: m.medidas,
       offers: { '@type': 'Offer', price: Number(m.preco).toFixed(2), priceCurrency: 'BRL', availability: disponibilidade(!m.esgotado), url, itemCondition: 'https://schema.org/NewCondition', seller: ORG } };
   });
 }
@@ -474,8 +474,8 @@ async function renderizar(rota, params) {
     html = html.replace('<div class="bl-grade" id="bl-grade"></div>', '<div class="bl-grade" id="bl-grade">' + d.posts.map(p => cardPost(d, p)).join('') + '</div>');
   } else if (base === 'arca') {
     const ms = arcas(d), pedido = params && params.get && params.get('modelo'), mp = ms[pedido];
-    o = { titulo: mp ? mp.nome + ' · Caixa de cristais personalizada | ARA' : seo.titulo, descricao: seo.descricao, url: DOMINIO + '/arca', ogTipo: 'product',
-      imagem: (mp || ms.atelie).foto, imgW: mp && pedido !== 'atelie' ? 0 : 1400, imgH: 1011, alt: 'Arca ARA, caixa de madeira e vidro com cristais',
+    o = { titulo: mp ? mp.nome + ' · Arca de cristais personalizada | ARA' : seo.titulo, descricao: seo.descricao, url: DOMINIO + '/arca', ogTipo: 'product',
+      imagem: (mp || ms.atelie).foto, imgW: mp && pedido !== 'atelie' ? 0 : 1400, imgH: 1011, alt: 'Arca ARA, madeira e vidro com cristais',
       preco: (mp || ms.essencial).preco, ld: ldArcas(d).concat([migalhas([['Início', '/'], ['A Arca', '/arca']])]) };
   } else if (base === 'historia') {
     o = { titulo: seo.titulo, descricao: seo.descricao, url: DOMINIO + '/historia',
@@ -540,7 +540,7 @@ async function feed() {
   Object.keys(ms).forEach(k => {
     const m = ms[k];
     itens.push(item({ id: 'arca-' + k, titulo: m.nome + ' ARA' + ARCA_TITULO, descricao: arcaTexto(d, m), link: DOMINIO + '/arca?modelo=' + k, canonico: DOMINIO + '/arca',
-      imagem: arcaFotosGoogle(m)[0], extras: arcaFotosGoogle(m).slice(1), ok: !m.esgotado, preco: m.preco, tipo: 'Decoração > Arca > Caixa de cristais personalizada > ' + m.nome,
+      imagem: arcaFotosGoogle(m)[0], extras: arcaFotosGoogle(m).slice(1), ok: !m.esgotado, preco: m.preco, tipo: 'Decoração > Arca > Arca de cristais personalizada > ' + m.nome,
       material: arcaCaixa(k), destaques: arcaDestaques(d, k, m),
       detalhes: [['Arca', 'Medidas', m.medidas], ['Arca', 'Pronta em', m.prazo], ['Arca', 'Personalização', 'Nome completo e data de nascimento']],
       rotulos: ['arca', 'arca', faixa(m.preco)] }));
@@ -559,7 +559,7 @@ async function feed() {
     }
   });
   return '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel>' +
-    '<title>ARA · Cristais de autor</title><link>' + DOMINIO + '</link><description>Caixas de cristais personalizadas e objetos de ritual da ARA.</description>\n' +
+    '<title>ARA · Cristais de autor</title><link>' + DOMINIO + '</link><description>Arcas de cristais personalizadas e objetos de decoração da ARA.</description>\n' +
     itens.filter(Boolean).join('\n') + '\n</channel></rss>\n';
 }
 
