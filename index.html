@@ -1,6 +1,20 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18496192703"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-18496192703');
+</script>
+<script>
+/* conversões do Google Ads: eventos padrão do Google; quando houver rótulo de conversão em ARA_ADS, manda também a conversão direta */
+var ARA_ADS={id:'AW-18496192703',rotulos:{purchase:'',generate_lead:'',contact:''}};
+function araGtag(ev,p){try{p=p||{};gtag('event',ev,p);var r=ARA_ADS.rotulos[ev];if(r)gtag('event','conversion',Object.assign({send_to:ARA_ADS.id+'/'+r},p));}catch(e){}}
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ARA · Arca de cristais e objetos de decoração exclusivos</title>
@@ -977,6 +991,7 @@ document.querySelectorAll('[data-wa]').forEach(a=>{a.href=wa(a.dataset.wa);a.tar
     const pay=document.getElementById('ok-pagar'),wb=document.getElementById('ok-whats');
     wb.className='btn '+(CONFIG.linkPagamento?'btn-vazado':'btn-champ');
     if(CONFIG.linkPagamento){pay.href=CONFIG.linkPagamento;pay.style.display='inline-flex';document.getElementById('ok-txt').textContent='Obrigado. Para reservar a sua vaga, faça o pagamento e confirme pelo WhatsApp. Começamos a leitura do seu mapa assim que tudo estiver certo.';}
+    araGtag('generate_lead',{value:tot,currency:'BRL'});
     pf.style.display='none';pok.style.display='block';form.reset();
   });
 })();
@@ -1420,7 +1435,7 @@ function ljFinal(a,estado){var cod=ljCod(a&&a.id),h=document.getElementById('lj-
  else{t.textContent='Aguarde, vamos entrar em contato pelo WhatsApp. Se preferir, chame a gente agora.';}
  if(estado!=='whatsapp')document.getElementById('lj-ok-wa').href=araWa('Olá! Fiz o pedido '+cod+' no site da ARA'+(estado==='pago'?' e o pagamento no '+forma+' foi aprovado.':' e paguei com '+forma+'.'));
  ljTela('lj-ok');}
-function ljConcluir(a){ljPixParar();ljAbertoLimpar();araCarLimpar();araTrack(a.metodo==='cartao'?'cartao_pago':'pix_pago','loja');ljFinal(a,'pago');}
+function ljConcluir(a){araGtag('purchase',{transaction_id:a.id,value:Number(a.total)||0,currency:'BRL'});ljPixParar();ljAbertoLimpar();araCarLimpar();araTrack(a.metodo==='cartao'?'cartao_pago':'pix_pago','loja');ljFinal(a,'pago');}
 function ljPixMostrar(a){var ped=ljCod(a.id);
  document.getElementById('lj-pix-valor').textContent=araBRL2(a.total);
  document.getElementById('lj-pix-cod').value=a.pix_codigo;
@@ -1542,7 +1557,7 @@ document.getElementById('ok-whats').addEventListener('click',function(){if(ARCA_
 function araRetornoPagamento(){var q=new URLSearchParams(location.search);var st=q.get('pagamento');if(!st)return;
  var pid=q.get('external_reference'),pay=q.get('payment_id')||q.get('collection_id');
  var t=document.getElementById('pg-t'),x=document.getElementById('pg-txt');
- if(st==='aprovado'){try{localStorage.removeItem('ara_carrinho_pago');}catch(e){}araCarLimpar();ljAbertoLimpar();t.textContent='Pedido enviado!';x.textContent='Pagamento aprovado. Obrigado! Aguarde, vamos entrar em contato pelo WhatsApp para combinar a entrega.';}
+ if(st==='aprovado'){var ab0=ljAbertoLer();araGtag('purchase',Object.assign({transaction_id:pid||pay||'',currency:'BRL'},ab0&&ab0.id===pid&&ab0.total?{value:Number(ab0.total)}:{}));try{localStorage.removeItem('ara_carrinho_pago');}catch(e){}araCarLimpar();ljAbertoLimpar();t.textContent='Pedido enviado!';x.textContent='Pagamento aprovado. Obrigado! Aguarde, vamos entrar em contato pelo WhatsApp para combinar a entrega.';}
  else if(st==='pendente'){t.textContent='Pedido enviado!';x.textContent='O pagamento está em análise no Mercado Pago (no Pix e no boleto isso pode levar alguns minutos). Aguarde, vamos entrar em contato pelo WhatsApp.';}
  else{t.textContent='Pagamento não concluído';x.textContent='O pagamento não foi finalizado. Você pode tentar de novo ou falar com a gente pelo WhatsApp.';}
  document.getElementById('pg-wa').href=araWa('Olá! Acabei de fazer um pedido no site da ARA'+(pid?' (pedido '+pid.slice(0,8)+')':'')+'.');
@@ -1622,6 +1637,7 @@ var ARA_GEO=null,ARA_FILA=[];
  try{fetch('https://ipapi.co/json/').then(function(r){return r.json();}).then(function(j){if(j&&j.city){fim({cidade:j.city||'',estado:j.region||'',pais:j.country_name||''},true);}else{return fetch('https://ipwho.is/?lang=pt-BR').then(function(r){return r.json();}).then(function(k){fim({cidade:k.city||'',estado:k.region||'',pais:k.country||''},!!k.city);});}}).catch(function(){fim({cidade:'',estado:'',pais:''},false);});}catch(e){fim({cidade:'',estado:'',pais:''},false);}})();
 var ARA_ORIGEM=null;try{ARA_ORIGEM=sessionStorage.getItem('ara_o');if(!ARA_ORIGEM){ARA_ORIGEM=araOrigem();sessionStorage.setItem('ara_o',ARA_ORIGEM);}}catch(e){ARA_ORIGEM=araOrigem();}
 function araTrack(ev,pagina,termo,res){if(/^(localhost|127\.)/.test(location.hostname)||location.protocol==='file:')return;
+ var gev={whatsapp:'contact',carrinho:'add_to_cart',checkout_inicio:'begin_checkout'}[ev];if(gev)araGtag(gev,{currency:'BRL'});
  ARA_FILA.push({evento:ev,pagina:String(pagina||'').slice(0,200),termo:String(termo||'').slice(0,120),resultados:(res==null?null:res),sessao:ARA_SESSAO,dispositivo:araDispositivo(),origem:ARA_ORIGEM||''});if(ARA_GEO)araEsvaziar();}
 /* envia direto pela API (não depende da biblioteca do Supabase carregar); ao sair da página, manda o que estiver na fila mesmo sem a cidade */
 function araEsvaziar(saindo){if(!ARA_GEO&&!saindo)return;var f=ARA_FILA.splice(0);if(!f.length)return;var g=ARA_GEO||{cidade:'',estado:'',pais:''};
