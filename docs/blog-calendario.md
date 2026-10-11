@@ -14,7 +14,7 @@ Depois de publicar, marque o tema como feito na tabela (coluna "Status") e, se u
 
 | Domingo | Tema | Busca alvo | Peças para linkar | Status |
 |---|---|---|---|---|
-| 11/10/2026 | Cristais para o quarto: quais escolher para dormir melhor | cristal para o quarto, cristal para dormir | Aura da Calma, Aura da Limpeza, Arca (quarto) | |
+| 11/10/2026 | Cristais para o quarto: quais escolher para dormir melhor | cristal para o quarto, cristal para dormir | Aura da Calma, Aura da Limpeza, Arca (quarto) | Publicado: /blog/cristais-para-o-quarto |
 | 18/10/2026 | Pirita: significado, como usar e onde colocar em casa | pirita significado, pirita para que serve | Aura da Prosperidade, /loja?pedra=pirita | |
 | 25/10/2026 | Presente com cristal: como escolher para cada pessoa | presente com cristal, presente espiritual | Arca, Auras, Bandeja Ritual | |
 | 01/11/2026 | Ametista: significado, decoração e cuidados com o sol | ametista significado, drusa de ametista | Aura da Calma, /loja?pedra=ametista | |
