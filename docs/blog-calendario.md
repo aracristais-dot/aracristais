@@ -16,6 +16,7 @@ Depois de publicar, marque o tema como feito na tabela (coluna "Status") e, se u
 |---|---|---|---|---|
 | 11/10/2026 | Cristais para o quarto: quais escolher para dormir melhor | cristal para o quarto, cristal para dormir | Aura da Calma, Aura da Limpeza, Arca (quarto) | Publicado: /blog/cristais-para-o-quarto |
 | 18/10/2026 | Pirita: significado, como usar e onde colocar em casa | pirita significado, pirita para que serve | Aura da Prosperidade, /loja?pedra=pirita | Publicado: /blog/pirita-significado-e-como-usar |
+| 21/10/2026 (extra) | Presente de Natal diferente: a Arca | presente de natal diferente, presente de natal com significado | Arca, Auras | Publicado: /blog/presente-de-natal-diferente-arca |
 | 25/10/2026 | Presente com cristal: como escolher para cada pessoa | presente com cristal, presente espiritual | Arca, Auras, Bandeja Ritual | |
 | 01/11/2026 | Ametista: significado, decoração e cuidados com o sol | ametista significado, drusa de ametista | Aura da Calma, /loja?pedra=ametista | |
 | 08/11/2026 | Cristais para o escritório e o home office | cristal para o escritório, cristal para foco | Aura da Prosperidade, Aura da Clareza, Ampulheta Pausa | |
